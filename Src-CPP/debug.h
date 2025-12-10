@@ -1,11 +1,24 @@
-/**
- * @file debug.h
- * @brief 
- * 
- * @author WilliTourt willitourt@foxmail.com
- * @date 2025.12.10
- * 
- */
+#/*******************************************************************************
+ * @file    debug.h
+ * @brief   ANSI-colored debug logging for STM32 (C++ header).
+ *
+ * This header declares the C++ `DEBUG` class used to send formatted log
+ * messages over a HAL UART interface. The class supports optional timestamps
+ * and ANSI color output for terminals that support it. A functionally
+ * equivalent C implementation is provided under `Src-C/`.
+ *
+ * Usage:
+ *   - Include this header in your C++ source and construct `DEBUG` with a
+ *     pointer to a configured `UART_HandleTypeDef`.
+ *   - Call `log`, `info`, `error`, etc. to print messages.
+ *
+ * Notes:
+ *   - Requires STM32Cube HAL UART module; enable `HAL_UART_MODULE_ENABLED`.
+ *   - See repository README for examples and integration instructions.
+ *
+ * @author:    WilliTourt <willitourt@foxmail.com>
+ * @date:      2025-12-10
+ ******************************************************************************/
 
 #pragma once
 

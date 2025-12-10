@@ -1,3 +1,18 @@
+#/*******************************************************************************
+ * @file    debug.c
+ * @brief   C implementation for ANSI-colored debug logging on STM32.
+ *
+ * Implements the C API declared in `Src-C/debug.h`. Provides formatted
+ * logging functions that send output over a HAL UART interface. Supports
+ * optional timestamps (using `HAL_GetTick()`) and ANSI color prefixes.
+ *
+ * Make sure to call `debug_init()` with a valid `UART_HandleTypeDef *`
+ * before using other functions in this file.
+ *
+ * @author:    WilliTourt <willitourt@foxmail.com>
+ * @date:      2025-12-10
+ ******************************************************************************/
+
 #include "debug.h"
 
 static UART_HandleTypeDef *_huart = NULL;

@@ -1,3 +1,19 @@
+#/*******************************************************************************
+ * @file    debug.cpp
+ * @brief   C++ implementation for ANSI-colored debug logging on STM32.
+ *
+ * Implements the `DEBUG` class declared in `Src-CPP/debug.h`. The class
+ * provides formatted logging helpers that send output over a HAL UART
+ * interface. Optional timestamps (via `HAL_GetTick()`) and ANSI color
+ * prefixes are supported for terminals that accept escape sequences.
+ *
+ * Usage: Construct `DEBUG` with a `UART_HandleTypeDef*` then call `log(),`
+ * `info(),` `error()`, etc. See README for examples and integration notes.
+ *
+ * @author:    WilliTourt <willitourt@foxmail.com>
+ * @date:      2025-12-10
+ ******************************************************************************/
+
 #include "debug.h"
 
 DEBUG::DEBUG(UART_HandleTypeDef *huart, bool enable_timestamp, bool enable_color)

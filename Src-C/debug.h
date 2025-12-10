@@ -1,3 +1,25 @@
+#/*******************************************************************************
+ * @file    debug.h
+ * @brief   C API for ANSI-colored debug logging on STM32 (header).
+ *
+ * This header provides a small C-friendly API that mirrors the C++
+ * `DEBUG` class. It sends formatted, optionally colored and timestamped
+ * messages through a HAL `UART_HandleTypeDef` instance.
+ *
+ * Requirements:
+ *  - STM32Cube HAL UART driver must be available and `HAL_UART_MODULE_ENABLED`
+ *    must be defined in your build.
+ *  - Include this header after your MCU/board `main.h` which provides the
+ *    `UART_HandleTypeDef` declaration and HAL prototypes.
+ *
+ * Example:
+ *   debug_init(&huart1, true, true);
+ *   debug_info("Hello from STM32!\n");
+ *
+ * @author:    WilliTourt <willitourt@foxmail.com>
+ * @date:      2025-12-10
+ ******************************************************************************/
+
 #ifndef STM32_ELEGANT_DEBUG_C_H
 #define STM32_ELEGANT_DEBUG_C_H
 
