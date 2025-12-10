@@ -19,7 +19,7 @@ void DEBUG::logWithType(const char* type, const char* format, ...) {
     vsnprintf(msg, sizeof(msg), format, args);
     va_end(args);
     char combined[DEBUG_BUFFER_LEN + 32];
-    snprintf(combined, sizeof(combined), "%s %s", type, msg);
+    snprintf(combined, sizeof(combined), "[ %s ] %s", type, msg);
     _send(combined);
 }
 
