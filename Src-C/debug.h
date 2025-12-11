@@ -1,5 +1,6 @@
-#/*******************************************************************************
+/*******************************************************************************
  * @file    debug.h
+ * @version 1.1
  * @brief   C API for ANSI-colored debug logging on STM32 (header).
  *
  * This header provides a small C-friendly API that mirrors the C++
@@ -18,6 +19,11 @@
  *
  * @author:    WilliTourt <willitourt@foxmail.com>
  * @date:      2025-12-10
+ * 
+ * @changelog:
+ * - 2025-12-10: Initial release.
+ * - 2025-12-11: Added support for filename and ln number in warning/error messages.
+ *               But this feature is not available below C++20.
  ******************************************************************************/
 
 #ifndef STM32_ELEGANT_DEBUG_C_H
@@ -51,7 +57,7 @@ extern "C" {
 
 /* ANSI escape codes for output *****************************************/
 
-/* Color/style macros */
+// Color/style macros
 #define CLR                 "\033[0m"
 
 #define COLOR_DARK_RED      "\033[31m"
@@ -70,7 +76,7 @@ extern "C" {
 #define COLOR_CYAN          "\033[96m"
 #define COLOR_WHITE         "\033[97m"
 
-/* Background colors and styles */
+// Background colors and styles
 #define BG_RED              "\033[41m"
 #define BG_GREEN            "\033[42m"
 #define BG_YELLOW           "\033[43m"
@@ -80,45 +86,55 @@ extern "C" {
 #define UNDERLINE           "\033[4m"
 #define BLINK               "\033[5m"
 
-/* Prefixes */
-#define ERROR_TYPE          "\033[91m\033[1m[ ERROR ]\033[0m "
-#define WARNING_TYPE        "\033[93m\033[1m[ WARNING ]\033[0m "
-#define INFO_TYPE           "\033[94m\033[1m[ INFO ]\033[0m "
-#define OK_TYPE             "\033[92m\033[1m[ OK ]\033[0m "
-#define SUCCESS_TYPE        "\033[92m\033[1m[ SUCCESS ]\033[0m "
+// Prefixes
+#define ERROR_TYPE          "\033[91m\033[1m[ERROR]\033[0m "
+#define WARNING_TYPE        "\033[93m\033[1m[WARNING]\033[0m "
+#define INFO_TYPE           "\033[94m\033[1m[INFO]\033[0m "
+#define OK_TYPE             "\033[92m\033[1m[OK]\033[0m "
+#define SUCCESS_TYPE        "\033[92m\033[1m[SUCCESS]\033[0m "
 
-#define ERROR_TYPE_PLAIN    "[ ERROR ] "
-#define WARNING_TYPE_PLAIN  "[ WARNING ] "
-#define INFO_TYPE_PLAIN     "[ INFO ] "
-#define OK_TYPE_PLAIN       "[ OK ] "
-#define SUCCESS_TYPE_PLAIN  "[ SUCCESS ] "
+#define ERROR_TYPE_PLAIN    "[ERROR] "
+#define WARNING_TYPE_PLAIN  "[WARNING] "
+#define INFO_TYPE_PLAIN     "[INFO] "
+#define OK_TYPE_PLAIN       "[OK] "
+#define SUCCESS_TYPE_PLAIN  "[SUCCESS] "
 
 /************************************************************************/
 
 #define DEBUG_BUFFER_LEN 256
 
-/* Initialize the library; MUST be called before other functions. */
-void debug_init(UART_HandleTypeDef *huart, bool enable_timestamp, bool enable_color);
+// Initialize the library; MUST be called before other functions.
+void debug_init(UART_HandleTypeDef *huart, bool enable_timestamp, bool enable_color, bool enable_filename_line);
 
-/* Basic formatted log */
+// Basic formatted log
 void debug_log(const char* format, ...);
 
-/* Log with a type prefix */
+// Log with a type prefix
 void debug_logWithType(const char* type, const char* format, ...);
 
-/* Convenience helpers */
-void debug_error(const char* format, ...);
-void debug_warning(const char* format, ...);
+// Convenience helpers
 void debug_ok(const char* format, ...);
 void debug_success(const char* format, ...);
 void debug_info(const char* format, ...);
 
-/* Runtime setters */
+// Variants that accept file and line (used by macros to automatically pass __FILE__/__LINE__)
+// void debug_logWithType_fileline(const char* file, int line, const char* type, const char* format, ...);
+void debug_error_fileline(const char* file, int line, const char* format, ...);
+void debug_warning_fileline(const char* file, int line, const char* format, ...);
+
+// Runtime setters
 void debug_setTimestampEnabled(bool enabled);
 void debug_setColorEnabled(bool enabled);
+// Enable/disable showing filename:line when using the file/line variants or macros
+void debug_setFilenameLineEnabled(bool enabled);
+
+// Macros to automatically pass caller file/line
+#define debug_error(...)                debug_error_fileline(__FILE__, __LINE__, __VA_ARGS__)
+#define debug_warning(...)              debug_warning_fileline(__FILE__, __LINE__, __VA_ARGS__)
+// #define debug_logWithType(type, ...) debug_logWithType_fileline(__FILE__, __LINE__, (type), __VA_ARGS__)
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* STM32_ELEGANT_DEBUG_C_H */
+#endif // STM32_ELEGANT_DEBUG_C_H

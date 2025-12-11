@@ -1,5 +1,6 @@
-#/*******************************************************************************
+/*******************************************************************************
  * @file    debug.h
+ * @version 1.1
  * @brief   ANSI-colored debug logging for STM32 (C++ header).
  *
  * This header declares the C++ `DEBUG` class used to send formatted log
@@ -21,8 +22,8 @@
  * 
  * @changelog:
  * - 2025-12-10: Initial release.
- * - 2025-12-11: Added support for filename and ln number in log messages. But
- *               this feature is not available below C++20.
+ * - 2025-12-11: Added support for filename and ln number in warning/error messages.
+ *               But this feature is not available below C++20.
  ******************************************************************************/
 
 #pragma once
@@ -109,8 +110,6 @@ class DEBUG {
         // Constructor: can enable/disable timestamp and color output globally
         DEBUG(UART_HandleTypeDef *huart, bool enable_timestamp = true, bool enable_color = true, bool enable_filename_line = false);
     
-
-    #if __cplusplus < 202002L
         // Basic formatted log
         void log(const char* format, ...);
 
@@ -118,24 +117,18 @@ class DEBUG {
         void logWithType(const char* type, const char* format, ...);
 
         // Convenience helpers
-        void error(const char* format, ...);
-        void warning(const char* format, ...);
         void ok(const char* format, ...);
         void success(const char* format, ...);
         void info(const char* format, ...);
+
+    #if __cplusplus < 202002L
+        // void logWithType(const char* type, const char* format, ...);
+        void error(const char* format, ...);
+        void warning(const char* format, ...);
     #else
-        // Basic formatted log (captures caller location)
-        void log(const char* format, std::source_location loc = std::source_location::current(), ...);
-
-        // Log with a type prefix
-        void logWithType(const char* type, const char* format, std::source_location loc = std::source_location::current(), ...);
-
-        // Convenience helpers
+        // void logWithType(const char* type, const char* format, std::source_location loc = std::source_location::current(), ...);
         void error(const char* format, std::source_location loc = std::source_location::current(), ...);
         void warning(const char* format, std::source_location loc = std::source_location::current(), ...);
-        void ok(const char* format, std::source_location loc = std::source_location::current(), ...);
-        void success(const char* format, std::source_location loc = std::source_location::current(), ...);
-        void info(const char* format, std::source_location loc = std::source_location::current(), ...);
     #endif
 
         inline void setTimestampEnabled(bool enabled) { _timestamp_enabled = enabled; }

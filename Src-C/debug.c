@@ -1,5 +1,6 @@
-#/*******************************************************************************
+/*******************************************************************************
  * @file    debug.c
+ * @version 1.1
  * @brief   C implementation for ANSI-colored debug logging on STM32.
  *
  * Implements the C API declared in `Src-C/debug.h`. Provides formatted
@@ -11,6 +12,9 @@
  *
  * @author:    WilliTourt <willitourt@foxmail.com>
  * @date:      2025-12-10
+ * 
+ * @changelog:
+ * - (See header file)
  ******************************************************************************/
 
 #include "debug.h"
@@ -18,11 +22,13 @@
 static UART_HandleTypeDef *_huart = NULL;
 static bool _timestamp_enabled = true;
 static bool _color_enabled = true;
+static bool _filename_line_enabled = false;
 
-void debug_init(UART_HandleTypeDef *huart, bool enable_timestamp, bool enable_color) {
+void debug_init(UART_HandleTypeDef *huart, bool enable_timestamp, bool enable_color, bool enable_filename_line) {
 	_huart = huart;
 	_timestamp_enabled = enable_timestamp;
 	_color_enabled = enable_color;
+	_filename_line_enabled = enable_filename_line;
 }
 
 static void _send(const char* text) {
@@ -71,11 +77,27 @@ void debug_logWithType(const char* type, const char* format, ...) {
 	va_end(args);
 
 	char combined[DEBUG_BUFFER_LEN + 32];
-    snprintf(combined, sizeof(combined), "[ %s ] %s", type, msg);
+    snprintf(combined, sizeof(combined), "\033[1m[%s]\033[0m %s", type, msg);
 	_send(combined);
 }
 
-void debug_error(const char* format, ...) {
+// void debug_logWithType_fileline(const char* file, int line, const char* type, const char* format, ...) {
+// 	char msg[DEBUG_BUFFER_LEN];
+// 	va_list args;
+// 	va_start(args, format);
+// 	vsnprintf(msg, sizeof(msg), format, args);
+// 	va_end(args);
+
+// 	char combined[DEBUG_BUFFER_LEN + 96];
+// 	if (_filename_line_enabled) {
+// 		snprintf(combined, sizeof(combined), "\033[1m[%s]\033[0m [%s:%ld] %s", type, file, line, msg);
+// 	} else {
+// 		snprintf(combined, sizeof(combined), "\033[1m[%s]\033[0m %s", type, msg);
+// 	}
+// 	_send(combined);
+// }
+
+void debug_error_fileline(const char* file, int line, const char* format, ...) {
 	char msg[DEBUG_BUFFER_LEN];
 	va_list args;
 	va_start(args, format);
@@ -83,12 +105,16 @@ void debug_error(const char* format, ...) {
 	va_end(args);
 
 	const char* prefix = _color_enabled ? ERROR_TYPE : ERROR_TYPE_PLAIN;
-	char combined[DEBUG_BUFFER_LEN + 32];
-	snprintf(combined, sizeof(combined), "%s%s", prefix, msg);
+	char combined[DEBUG_BUFFER_LEN + 96];
+	if (_filename_line_enabled) {
+		snprintf(combined, sizeof(combined), "%s[%s:%d] %s", prefix, file, line, msg);
+	} else {
+		snprintf(combined, sizeof(combined), "%s%s", prefix, msg);
+	}
 	_send(combined);
 }
 
-void debug_warning(const char* format, ...) {
+void debug_warning_fileline(const char* file, int line, const char* format, ...) {
 	char msg[DEBUG_BUFFER_LEN];
 	va_list args;
 	va_start(args, format);
@@ -96,8 +122,12 @@ void debug_warning(const char* format, ...) {
 	va_end(args);
 
 	const char* prefix = _color_enabled ? WARNING_TYPE : WARNING_TYPE_PLAIN;
-	char combined[DEBUG_BUFFER_LEN + 32];
-	snprintf(combined, sizeof(combined), "%s%s", prefix, msg);
+	char combined[DEBUG_BUFFER_LEN + 96];
+	if (_filename_line_enabled) {
+		snprintf(combined, sizeof(combined), "%s[%s:%d] %s", prefix, file, line, msg);
+	} else {
+		snprintf(combined, sizeof(combined), "%s%s", prefix, msg);
+	}
 	_send(combined);
 }
 
@@ -146,4 +176,8 @@ void debug_setTimestampEnabled(bool enabled) {
 
 void debug_setColorEnabled(bool enabled) {
 	_color_enabled = enabled;
+}
+
+void debug_setFilenameLineEnabled(bool enabled) {
+	_filename_line_enabled = enabled;
 }
