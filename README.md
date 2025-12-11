@@ -4,7 +4,12 @@
 
 ## Introduction
 - A lightweight serial debug library suitable for both C and C++ projects on STM32 using the HAL drivers.
-- Features: formatted output, optional timestamp, optional filename and line number display for ERROR/WARNING messages, optional ANSI color output, and convenient type prefixes (ERROR/WARNING/INFO/OK/SUCCESS).
+- Features: 
+  - Formatted output
+  - Optional timestamp
+  - Ooptional filename and line number display for ERROR/WARNING messages
+  - Optional ANSI color output
+  - Convenient type prefixes (ERROR/WARNING/INFO/OK/SUCCESS)
 
 ![Example](example.png)
 ![Showing Filename and Line](example_fileline.png)
