@@ -115,7 +115,7 @@ debug_setFilenameLineEnabled(true);  // After enabling, error and warning messag
 
 ## Other
 
-This project was inspired by a suggestion from Zodiak_Jealously ;p
+> This project was inspired by a suggestion from Zodiak_Jealously ;p
 
 WilliTourt 2025.12.10 initial release | willitourt@doxmail.com
 
