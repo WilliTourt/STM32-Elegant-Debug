@@ -7,8 +7,8 @@
 - Features: 
   - Formatted output
   - Optional timestamp
-  - Ooptional filename and line number display for ERROR/WARNING messages
-  - Optional ANSI color output
+  - Optional filename and line number display for ERROR/WARNING messages
+  - Optional ANSI color output, including fully customizable 24-bit colors
   - Convenient type prefixes (ERROR/WARNING/INFO/OK/SUCCESS)
 
 ![Example](example.png)
@@ -88,6 +88,19 @@ debug_setFilenameLineEnabled(true);  // After enabling, error and warning messag
   - `void setColorEnabled(bool enabled);`
   - `void setFilenameLineEnabled(bool enabled);` (C++20 and above only)
 
+### About ANSI Escape Codes
+The color and style macros in the library are ANSI escape codes. If your terminal doesn't support them, you can disable color output at runtime and avoid using the `%s` formatting operations.
+
+To set custom colors and styles for your output strings, wrap the color/style macros and the clear macros with a pair of `%s` placeholders. For example:
+```cpp
+log("Hello World! %sI am RED!%s %s%sI am italic and GREEN!%s Now i cleared italic style but still GREEN.%s\n", 
+COLOR_RED, CLR_TEXT_COLOR, ITALIC, COLOR_GREEN, CLR_ITALIC, CLR);
+```
+
+For 24-bit custom colors, use the `COLOR_CUSTOM(r,g,b)` and `BG_COLOR_CUSTOM(r,g,b)` macros, where `r`, `g`, `b` are integers between 0 and 255.
+
+For more information about ANSI escape codes, refer to: [ANSI escape code - Handwiki](https://handwiki.org/wiki/ANSI_escape_code)
+
 ## Troubleshooting
 - Linker errors (undefined reference to `debug_init` / `debug_info`):
   - Ensure `Src-C/ElegantDebug.c` is added to the project and compiled into an object file that is linked into your final binary.
@@ -99,16 +112,17 @@ debug_setFilenameLineEnabled(true);  // After enabling, error and warning messag
 
 ## Changelog
 
-### v1.1.0 (2025-12-11)
-- **New**: Support for displaying filename and line number in error and warning messages
-  - C version: Enable with `debug_setFilenameLineEnabled(true)`, `debug_error()` and `debug_warning()` automatically include filename and line number
-  - C++ version (C++20 and above): Enable with `setFilenameLineEnabled(true)`, supports `std::source_location`
-- **Improvement**: Updated API documentation to accurately reflect actual functionality
-
-### v1.0.0 (2025-12-10)
+### v1.0 (2025-12-10)
 - **Initial release**: First release of STM32 Elegant Debug library
 - **Features**: Formatted log output, timestamp, ANSI colors, type prefixes and other basic functionality
 - **Support**: Dual C and C++ versions, compatible with STM32 HAL library
+
+### v1.1 (2025-12-11)
+- **New**: Support for displaying filename and line number in error and warning messages
+  - C version: Enable with `debug_setFilenameLineEnabled(true)`, `debug_error()` and `debug_warning()` automatically include filename and line number
+  - C++ version (C++20 and above): Enable with `setFilenameLineEnabled(true)`, supports `std::source_location`
+- **New**: Supports more ANSI colors and styles
+- **Improvement**: Updated API documentation to accurately reflect actual functionality
 
 ## License
 - See the `LICENSE` file at the repository root for licensing details.
@@ -119,4 +133,4 @@ debug_setFilenameLineEnabled(true);  // After enabling, error and warning messag
 
 WilliTourt 2025.12.10 initial release | willitourt@doxmail.com
 
-Contributions and PRs welcome!
+Contributions and PRs welcome!!

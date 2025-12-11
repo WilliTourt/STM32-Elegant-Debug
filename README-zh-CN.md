@@ -8,7 +8,7 @@
   - 格式化日志
   - 可选的时间戳
   - 可选的 ERROR/WARNING 信息 显示报错文件名和行号
-  - 可选的 ANSI 颜色输出
+  - 可选的 ANSI 颜色输出，包括完全自定义的24位颜色
   - 便捷的类型前缀（ERROR/WARNING/INFO/OK/SUCCESS）
 
 ![Example](example.png)
@@ -90,6 +90,19 @@ debug_setFilenameLineEnabled(true);  // 启用后，error和warning信息将显�
   - `void setColorEnabled(bool enabled);`
   - `void setFilenameLineEnabled(bool enabled);` (仅C++20及以上版本)
 
+### 关于ANSI转义码
+库中的颜色和样式宏均为 ANSI 转义码，如果终端不支持，可以通过运行时设置关闭颜色输出，并停用%s修饰的操作。
+
+要为你的输出字符串设置自定义颜色和样式，请用一对 `%s` 来包裹颜色/样式宏和用以清除颜色/样式的宏。例如：
+```cpp
+log("Hello World! %sI am RED!%s %s%sI am italic and GREEN!%s Now i cleared italic style but still GREEN.%s\n", 
+COLOR_RED, CLR_TEXT_COLOR, ITALIC, COLOR_GREEN, CLR_ITALIC, CLR);
+```
+
+对于24位自定义颜色，请使用 `COLOR_CUSTOM(r,g,b)` 和 `BG_COLOR_CUSTOM(r,g,b)` 宏，其中 `r`、`g`、`b` 为0~255之间的整数。
+
+关于 ANSI 转义码的更多信息，请参考：[ANSI escape code - Handwiki](https://handwiki.org/wiki/ANSI_escape_code)
+
 ## 常见问题与排查
 - 链接错误（undefined reference to `debug_init` / `debug_info`）：
   - 确认 `Src-C/ElegantDebug.c` 已被加入到工程并被编译产生 `.o`，最终与其它目标一起链接。
@@ -111,6 +124,7 @@ debug_setFilenameLineEnabled(true);  // 启用后，error和warning信息将显�
 - **新增**: 支持在错误和警告信息中显示文件名和行号
   - C版本：通过 `debug_setFilenameLineEnabled(true)` 启用，`debug_error()` 和 `debug_warning()` 自动包含文件名行号
   - C++版本（C++20及以上）：通过 `setFilenameLineEnabled(true)` 启用，支持 `std::source_location`
+- **新增**: 支持更多的ANSI颜色和样式
 - **改进**: 更新API文档，更准确地反映实际功能
 
 ## 其他
