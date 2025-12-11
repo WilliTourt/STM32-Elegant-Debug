@@ -1,15 +1,15 @@
 /*******************************************************************************
- * @file    debug.h
+ * @file    ElegantDebug.h
  * @version 1.1
  * @brief   ANSI-colored debug logging for STM32 (C++ header).
  *
- * This header declares the C++ `DEBUG` class used to send formatted log
+ * This header declares the C++ `ElegantDebug` class used to send formatted log
  * messages over a HAL UART interface. The class supports optional timestamps
  * and ANSI color output for terminals that support it. A functionally
  * equivalent C implementation is provided under `Src-C/`.
  *
  * Usage:
- *   - Include this header in your C++ source and construct `DEBUG` with a
+ *   - Include this header in your C++ source and construct `ElegantDebug` with a
  *     pointer to a configured `UART_HandleTypeDef`.
  *   - Call `log`, `info`, `error`, etc. to print messages.
  *
@@ -104,11 +104,11 @@
 
 #define DEBUG_BUFFER_LEN 256
 
-class DEBUG {
+class ElegantDebug {
     public:
 
         // Constructor: can enable/disable timestamp and color output globally
-        DEBUG(UART_HandleTypeDef *huart, bool enable_timestamp = true, bool enable_color = true, bool enable_filename_line = false);
+        ElegantDebug(UART_HandleTypeDef *huart, bool enable_timestamp = true, bool enable_color = true, bool enable_filename_line = false);
     
         // Basic formatted log
         void log(const char* format, ...);

@@ -22,13 +22,13 @@
 - 依赖 STM32Cube HAL 驱动，必须启用一个串口
 - 输出长度由 `DEBUG_BUFFER_LEN` 宏控制（默认 256）
 
-1. 将 `Src-C/debug.h` 与 `Src-C/debug.c` 添加到你的工程（确保 `debug.c` 被编译并加入链接）。
-   - Makefile/CMake：将 `.../Src-C/debug.c` 加入 `SRCS` / `target_sources`。
+1. 将 `Src-C/ElegantDebug.h` 与 `Src-C/ElegantDebug.c` 添加到你的工程（确保 `ElegantDebug.c` 被编译并加入链接）。
+   - Makefile/CMake：将 `.../Src-C/ElegantDebug.c` 加入 `SRCS` / `target_sources`。
    - Keil/MDK / IAR / CubeIDE：在 Project Explorer 中 Right-click -> Add Existing Files。
 
 2. 在你的代码中包含头文件并初始化（以 `huart1` ，C语言版本为例，C++版本用法完全一致）：
 ```c
-#include "debug.h"
+#include "ElegantDebug.h"
 
 /* 在合适的位置（比如 main() 里）初始化 */
 debug_init(&huart1, true /* enable timestamp */, true /* enable color */, false /* enable filename line */);
@@ -72,7 +72,7 @@ debug_setFilenameLineEnabled(true);  // 启用后，error和warning信息将显�
   - `void debug_setFilenameLineEnabled(bool enabled);`
 
 ### C++ 版本
-- `DEBUG(UART_HandleTypeDef *huart, bool enable_timestamp = true, bool enable_color = true, bool enable_filename_line = false);`
+- `ElegantDebug(UART_HandleTypeDef *huart, bool enable_timestamp = true, bool enable_color = true, bool enable_filename_line = false);`
   - 构造函数，传入 HAL UART 句柄和是否启用时间戳/颜色/文件名行号显示。
 - `void log(const char* format, ...);`
   - 原始格式化输出（无前缀）。
@@ -92,7 +92,7 @@ debug_setFilenameLineEnabled(true);  // 启用后，error和warning信息将显�
 
 ## 常见问题与排查
 - 链接错误（undefined reference to `debug_init` / `debug_info`）：
-  - 确认 `Src-C/debug.c` 已被加入到工程并被编译产生 `.o`，最终与其它目标一起链接。
+  - 确认 `Src-C/ElegantDebug.c` 已被加入到工程并被编译产生 `.o`，最终与其它目标一起链接。
 - 串口无输出或者一坨乱码：
   - 确认 `huart` 已正确初始化（**特别是波特率**）。
   - 如果启用颜色但终端不支持 ANSI，可以通过 `debug_setColorEnabled(false)` 关闭颜色。

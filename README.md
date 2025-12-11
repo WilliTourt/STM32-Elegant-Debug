@@ -22,13 +22,13 @@
 - Depends on STM32Cube HAL and at least one UART enabled.
 - The output buffer length is controlled by the `DEBUG_BUFFER_LEN` macro (default 256).
 
-1. Add `Src-C/debug.h` and `Src-C/debug.c` to your project (make sure `debug.c` is compiled and linked).
-   - Makefile/CMake: add `.../Src-C/debug.c` to your `SRCS` / `target_sources`.
+1. Add `Src-C/ElegantDebug.h` and `Src-C/ElegantDebug.c` to your project (make sure `ElegantDebug.c` is compiled and linked).
+   - Makefile/CMake: add `.../Src-C/ElegantDebug.c` to your `SRCS` / `target_sources`.
    - Keil/MDK / IAR / CubeIDE: in the Project Explorer, Right-click -> Add Existing Files.
 
 2. Include the header and initialize (example using `huart1`, C API shown; C++ usage is identical):
 ```c
-#include "debug.h"
+#include "ElegantDebug.h"
 
 /* Initialize at an appropriate place (e.g. in main()) */
 debug_init(&huart1, true /* enable timestamp */, true /* enable color */, false /* enable filename line */);
@@ -72,7 +72,7 @@ debug_setFilenameLineEnabled(true);  // After enabling, error and warning messag
   - `void debug_setFilenameLineEnabled(bool enabled);`
 
 ### C++ API
-- `DEBUG(UART_HandleTypeDef *huart, bool enable_timestamp = true, bool enable_color = true, bool enable_filename_line = false);`
+- `ElegantDebug(UART_HandleTypeDef *huart, bool enable_timestamp = true, bool enable_color = true, bool enable_filename_line = false);`
   - Constructor: pass a HAL UART handle and flags to enable timestamp/color/filename-line display.
 - `void log(const char* format, ...);`
 - `void logWithType(const char* type, const char* format, ...);`
@@ -90,12 +90,12 @@ debug_setFilenameLineEnabled(true);  // After enabling, error and warning messag
 
 ## Troubleshooting
 - Linker errors (undefined reference to `debug_init` / `debug_info`):
-  - Ensure `Src-C/debug.c` is added to the project and compiled into an object file that is linked into your final binary.
+  - Ensure `Src-C/ElegantDebug.c` is added to the project and compiled into an object file that is linked into your final binary.
 - No output or garbled output on the serial terminal:
   - Verify `huart` is correctly initialized (especially baud rate).
   - If colors are enabled but your terminal does not support ANSI, call `debug_setColorEnabled(false)`.
 - Unexpected resets/crashes:
-  - Possible buffer overflow: check `DEBUG_BUFFER_LEN` (default 256). Increase it in `debug.h` if you need longer messages (mind RAM usage).
+  - Possible buffer overflow: check `DEBUG_BUFFER_LEN` (default 256). Increase it in `ElegantDebug.h` if you need longer messages (mind RAM usage).
 
 ## Changelog
 

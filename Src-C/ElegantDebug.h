@@ -1,10 +1,10 @@
 /*******************************************************************************
- * @file    debug.h
+ * @file    ElegantDebug.h
  * @version 1.1
  * @brief   C API for ANSI-colored debug logging on STM32 (header).
  *
  * This header provides a small C-friendly API that mirrors the C++
- * `DEBUG` class. It sends formatted, optionally colored and timestamped
+ * `ElegantDebug` class. It sends formatted, optionally colored and timestamped
  * messages through a HAL `UART_HandleTypeDef` instance.
  *
  * Requirements:
@@ -26,8 +26,8 @@
  *               But this feature is not available below C++20.
  ******************************************************************************/
 
-#ifndef STM32_ELEGANT_DEBUG_C_H
-#define STM32_ELEGANT_DEBUG_C_H
+#ifndef __ELEGANT_DEBUG_H
+#define __ELEGANT_DEBUG_H
 
 #include "main.h"
 
@@ -137,4 +137,4 @@ void debug_setFilenameLineEnabled(bool enabled);
 }
 #endif
 
-#endif // STM32_ELEGANT_DEBUG_C_H
+#endif // __ELEGANT_DEBUG_H

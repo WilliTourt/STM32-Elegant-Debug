@@ -1,14 +1,14 @@
 /*******************************************************************************
- * @file    debug.cpp
+ * @file    ElegantDebug.cpp
  * @version 1.1
  * @brief   C++ implementation for ANSI-colored debug logging on STM32.
  *
- * Implements the `DEBUG` class declared in `Src-CPP/debug.h`. The class
+ * Implements the `ElegantDebug` class declared in `Src-CPP/debug.h`. The class
  * provides formatted logging helpers that send output over a HAL UART
  * interface. Optional timestamps (via `HAL_GetTick()`) and ANSI color
  * prefixes are supported for terminals that accept escape sequences.
  *
- * Usage: Construct `DEBUG` with a `UART_HandleTypeDef*` then call `log(),`
+ * Usage: Construct `ElegantDebug` with a `UART_HandleTypeDef*` then call `log(),`
  * `info(),` `error()`, etc. See README for examples and integration notes.
  *
  * @author:    WilliTourt <willitourt@foxmail.com>
@@ -18,12 +18,12 @@
  * - (See header file)
  ******************************************************************************/
 
-#include "debug.h"
+#include "ElegantDebug.h"
 
-DEBUG::DEBUG(UART_HandleTypeDef *huart, bool enable_timestamp, bool enable_color, bool enable_filename_line)
+ElegantDebug::ElegantDebug(UART_HandleTypeDef *huart, bool enable_timestamp, bool enable_color, bool enable_filename_line)
     : _huart(huart), _timestamp_enabled(enable_timestamp), _color_enabled(enable_color), _filename_line_enabled(enable_filename_line) {}
 
-void DEBUG::_send(const char* text) {
+void ElegantDebug::_send(const char* text) {
     char out[DEBUG_BUFFER_LEN * 2];
     size_t pos = 0;
     if (_timestamp_enabled) { // Prefix timestamp [hh:mm:ss.mmm] using HAL_GetTick()
@@ -45,7 +45,7 @@ void DEBUG::_send(const char* text) {
 
 
 
-void DEBUG::log(const char* format, ...) {
+void ElegantDebug::log(const char* format, ...) {
     char msg[DEBUG_BUFFER_LEN];
     va_list args;
     va_start(args, format);
@@ -55,7 +55,7 @@ void DEBUG::log(const char* format, ...) {
 }
 
 // #if __cplusplus >= 202002L
-// void DEBUG::logWithType(const char* type, const char* format, std::source_location loc, ...) {
+// void ElegantDebug::logWithType(const char* type, const char* format, std::source_location loc, ...) {
 //     char msg[DEBUG_BUFFER_LEN];
 //     va_list args;
 //     va_start(args, loc);
@@ -71,7 +71,7 @@ void DEBUG::log(const char* format, ...) {
 //     _send(combined);
 // }
 // #else
-void DEBUG::logWithType(const char* type, const char* format, ...) {
+void ElegantDebug::logWithType(const char* type, const char* format, ...) {
     char msg[DEBUG_BUFFER_LEN];
     va_list args;
     va_start(args, format);
@@ -85,7 +85,7 @@ void DEBUG::logWithType(const char* type, const char* format, ...) {
 // #endif
 
 #if __cplusplus >= 202002L
-void DEBUG::error(const char* format, std::source_location loc, ...) {
+void ElegantDebug::error(const char* format, std::source_location loc, ...) {
     char msg[DEBUG_BUFFER_LEN];
     va_list args;
     va_start(args, loc);
@@ -103,7 +103,7 @@ void DEBUG::error(const char* format, std::source_location loc, ...) {
     _send(combined);
 }
 #else
-void DEBUG::error(const char* format, ...) {
+void ElegantDebug::error(const char* format, ...) {
     char msg[DEBUG_BUFFER_LEN];
     va_list args;
     va_start(args, format);
@@ -119,7 +119,7 @@ void DEBUG::error(const char* format, ...) {
 #endif
 
 #if __cplusplus >= 202002L
-void DEBUG::warning(const char* format, std::source_location loc, ...) {
+void ElegantDebug::warning(const char* format, std::source_location loc, ...) {
     char msg[DEBUG_BUFFER_LEN];
     va_list args;
     va_start(args, loc);
@@ -138,7 +138,7 @@ void DEBUG::warning(const char* format, std::source_location loc, ...) {
     _send(combined);
 }
 #else
-void DEBUG::warning(const char* format, ...) {
+void ElegantDebug::warning(const char* format, ...) {
     char msg[DEBUG_BUFFER_LEN];
     va_list args;
     va_start(args, format);
@@ -153,7 +153,7 @@ void DEBUG::warning(const char* format, ...) {
 }
 #endif
 
-void DEBUG::ok(const char* format, ...) {
+void ElegantDebug::ok(const char* format, ...) {
     char msg[DEBUG_BUFFER_LEN];
     va_list args;
     va_start(args, format);
@@ -166,7 +166,7 @@ void DEBUG::ok(const char* format, ...) {
     _send(combined);
 }
 
-void DEBUG::success(const char* format, ...) {
+void ElegantDebug::success(const char* format, ...) {
     char msg[DEBUG_BUFFER_LEN];
     va_list args;
     va_start(args, format);
@@ -179,7 +179,7 @@ void DEBUG::success(const char* format, ...) {
     _send(combined);
 }
 
-void DEBUG::info(const char* format, ...) {
+void ElegantDebug::info(const char* format, ...) {
     char msg[DEBUG_BUFFER_LEN];
     va_list args;
     va_start(args, format);
@@ -196,7 +196,7 @@ void DEBUG::info(const char* format, ...) {
 
 /* Deprecated functions, originally for macro-based logging *************************************
 
-void DEBUG::_log(const char* file, int line, const char* format, ...) {
+void ElegantDebug::_log(const char* file, int line, const char* format, ...) {
     char msg[DEBUG_BUFFER_LEN];
     va_list args;
     va_start(args, format);
@@ -212,7 +212,7 @@ void DEBUG::_log(const char* file, int line, const char* format, ...) {
     _send(combined);
 }
 
-void DEBUG::_logWithType(const char* file, int line, const char* type, const char* format, ...) {
+void ElegantDebug::_logWithType(const char* file, int line, const char* type, const char* format, ...) {
     char msg[DEBUG_BUFFER_LEN];
     va_list args;
     va_start(args, format);
@@ -227,7 +227,7 @@ void DEBUG::_logWithType(const char* file, int line, const char* type, const cha
     _send(combined);
 }
 
-void DEBUG::_error(const char* file, int line, const char* format, ...) {
+void ElegantDebug::_error(const char* file, int line, const char* format, ...) {
     char msg[DEBUG_BUFFER_LEN];
     va_list args;
     va_start(args, format);
@@ -243,7 +243,7 @@ void DEBUG::_error(const char* file, int line, const char* format, ...) {
     _send(combined);
 }
 
-void DEBUG::_warning(const char* file, int line, const char* format, ...) {
+void ElegantDebug::_warning(const char* file, int line, const char* format, ...) {
     char msg[DEBUG_BUFFER_LEN];
     va_list args;
     va_start(args, format);
@@ -259,7 +259,7 @@ void DEBUG::_warning(const char* file, int line, const char* format, ...) {
     _send(combined);
 }
 
-void DEBUG::_ok(const char* file, int line, const char* format, ...) {
+void ElegantDebug::_ok(const char* file, int line, const char* format, ...) {
     char msg[DEBUG_BUFFER_LEN];
     va_list args;
     va_start(args, format);
@@ -275,7 +275,7 @@ void DEBUG::_ok(const char* file, int line, const char* format, ...) {
     _send(combined);
 }
 
-void DEBUG::_success(const char* file, int line, const char* format, ...) {
+void ElegantDebug::_success(const char* file, int line, const char* format, ...) {
     char msg[DEBUG_BUFFER_LEN];
     va_list args;
     va_start(args, format);
@@ -291,7 +291,7 @@ void DEBUG::_success(const char* file, int line, const char* format, ...) {
     _send(combined);
 }
 
-void DEBUG::_info(const char* file, int line, const char* format, ...) {
+void ElegantDebug::_info(const char* file, int line, const char* format, ...) {
     char msg[DEBUG_BUFFER_LEN];
     va_list args;
     va_start(args, format);

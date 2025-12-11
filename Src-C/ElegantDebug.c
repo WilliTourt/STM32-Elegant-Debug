@@ -1,5 +1,5 @@
 /*******************************************************************************
- * @file    debug.c
+ * @file    ElegantDebug.c
  * @version 1.1
  * @brief   C implementation for ANSI-colored debug logging on STM32.
  *
@@ -17,7 +17,7 @@
  * - (See header file)
  ******************************************************************************/
 
-#include "debug.h"
+#include "ElegantDebug.h"
 
 static UART_HandleTypeDef *_huart = NULL;
 static bool _timestamp_enabled = true;
