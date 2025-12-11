@@ -23,7 +23,9 @@
  * @changelog:
  * - 2025-12-10: Initial release.
  * - 2025-12-11: Added support for filename and ln number in warning/error messages.
- *               But this feature is not available below C++20.
+ *               But this feature is not available below C++20. Allowed custom styles
+ *               for type prefix in logWithType().
+ * 
  ******************************************************************************/
 
 #pragma once
