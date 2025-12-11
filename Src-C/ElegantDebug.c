@@ -69,7 +69,7 @@ void debug_log(const char* format, ...) {
 	_send(msg);
 }
 
-void debug_logWithType(const char* type, const char* format, ...) {
+void debug_logWithType(const char* type, const char* style, const char* format, ...) {
 	char msg[DEBUG_BUFFER_LEN];
 	va_list args;
 	va_start(args, format);
@@ -77,7 +77,7 @@ void debug_logWithType(const char* type, const char* format, ...) {
 	va_end(args);
 
 	char combined[DEBUG_BUFFER_LEN + 32];
-    snprintf(combined, sizeof(combined), "\033[1m[%s]\033[0m %s", type, msg);
+	snprintf(combined, sizeof(combined), "\033[1m%s[%s]\033[0m %s", style, type, msg);
 	_send(combined);
 }
 

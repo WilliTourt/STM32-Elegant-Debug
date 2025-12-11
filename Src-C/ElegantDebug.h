@@ -110,7 +110,7 @@ void debug_init(UART_HandleTypeDef *huart, bool enable_timestamp, bool enable_co
 void debug_log(const char* format, ...);
 
 // Log with a type prefix
-void debug_logWithType(const char* type, const char* format, ...);
+void debug_logWithType(const char* type, const char* style, const char* format, ...);
 
 // Convenience helpers
 void debug_ok(const char* format, ...);

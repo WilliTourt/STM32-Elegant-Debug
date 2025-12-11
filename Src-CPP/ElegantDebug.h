@@ -114,7 +114,7 @@ class ElegantDebug {
         void log(const char* format, ...);
 
         // Log with a type prefix
-        void logWithType(const char* type, const char* format, ...);
+        void logWithType(const char* type, const char* style, const char* format, ...);
 
         // Convenience helpers
         void ok(const char* format, ...);
