@@ -23,8 +23,9 @@
  * @changelog:
  * - 2025-12-10: Initial release.
  * - 2025-12-11: Added support for filename and ln number in warning/error messages.
- *               But this feature is not available below C++20. Allowed custom styles
- *               for type prefix in logWithType().
+ *               But this feature is not available below C++20.
+ *               Allowed custom styles for type prefix in logWithType().
+ *               Added more ANSI escape codes for color/style.
  * 
  ******************************************************************************/
 
@@ -59,9 +60,7 @@ extern "C" {
 
 /* ANSI escape codes for output *****************************************/
 
-// Color/style macros
-#define CLR                 "\033[0m"
-
+// Colors for texts
 #define COLOR_DARK_RED      "\033[31m"
 #define COLOR_DARK_GREEN    "\033[32m"
 #define COLOR_DARK_YELLOW   "\033[33m"
@@ -78,15 +77,43 @@ extern "C" {
 #define COLOR_CYAN          "\033[96m"
 #define COLOR_WHITE         "\033[97m"
 
-// Background colors and styles
+// Helper to stringify macro arguments (two-step to allow macro expansion)
+#define _ED_STR_HELPER(x) #x
+#define _ED_STR(x) _ED_STR_HELPER(x)
+
+#define COLOR_CUSTOM(r,g,b) "\033[38;2;" _ED_STR(r) ";" _ED_STR(g) ";" _ED_STR(b) "m" // Custom 24-bit colors for text
+
+// Background colors
 #define BG_RED              "\033[41m"
 #define BG_GREEN            "\033[42m"
 #define BG_YELLOW           "\033[43m"
 #define BG_BLUE             "\033[44m"
+#define BG_MAGENTA          "\033[45m"
+#define BG_CYAN             "\033[46m"
+#define BG_WHITE            "\033[47m"
 
+#define BG_COLOR_CUSTOM(r,g,b) "\033[48;2;" _ED_STR(r) ";" _ED_STR(g) ";" _ED_STR(b) "m" // Custom 24-bit background colors
+
+// Styles
 #define BOLD                "\033[1m"
+#define DIM                 "\033[2m"
+#define ITALIC              "\033[3m"
 #define UNDERLINE           "\033[4m"
 #define BLINK               "\033[5m"
+#define REVERSE             "\033[7m"
+#define CONCEAL             "\033[8m"
+
+// Clear specific color/styles
+#define CLR                 "\033[0m"   // Clear color and style of text before this macro
+#define CLR_TEXT_COLOR      "\033[39m"
+#define CLR_BG_COLOR        "\033[49m"
+#define CLR_BOLD            "\033[21m"
+#define CLR_DIM             "\033[22m"
+#define CLR_ITALIC          "\033[23m"
+#define CLR_UNDERLINE       "\033[24m"
+#define CLR_BLINK           "\033[25m"
+#define CLR_REVERSE         "\033[27m"
+#define CLR_CONCEAL         "\033[28m"
 
 // Prefixes
 #define ERROR_TYPE          "\033[91m\033[1m[ERROR]\033[0m "
