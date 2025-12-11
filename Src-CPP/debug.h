@@ -18,6 +18,11 @@
  *
  * @author:    WilliTourt <willitourt@foxmail.com>
  * @date:      2025-12-10
+ * 
+ * @changelog:
+ * - 2025-12-10: Initial release.
+ * - 2025-12-11: Added support for filename and ln number in log messages. But
+ *               this feature is not available below C++20.
  ******************************************************************************/
 
 #pragma once
@@ -27,6 +32,10 @@
 #include <cstdio>
 #include <cstdarg>
 #include <cstring>
+
+#if __cplusplus >= 202002L
+#include <source_location>
+#endif
 
 #if !defined(__STM32F1xx_HAL_H) && \
     !defined(__STM32F4xx_HAL_H) && \
@@ -78,17 +87,17 @@
 #define BLINK               "\033[5m"
 
 // Prefixes
-#define ERROR_TYPE          "\033[91m\033[1m[ ERROR ]\033[0m "
-#define WARNING_TYPE        "\033[93m\033[1m[ WARNING ]\033[0m "
-#define INFO_TYPE           "\033[94m\033[1m[ INFO ]\033[0m "
-#define OK_TYPE             "\033[92m\033[1m[ OK ]\033[0m "
-#define SUCCESS_TYPE        "\033[92m\033[1m[ SUCCESS ]\033[0m "
+#define ERROR_TYPE          "\033[91m\033[1m[ERROR]\033[0m "
+#define WARNING_TYPE        "\033[93m\033[1m[WARNING]\033[0m "
+#define INFO_TYPE           "\033[94m\033[1m[INFO]\033[0m "
+#define OK_TYPE             "\033[92m\033[1m[OK]\033[0m "
+#define SUCCESS_TYPE        "\033[92m\033[1m[SUCCESS]\033[0m "
 
-#define ERROR_TYPE_PLAIN    "[ ERROR ] "
-#define WARNING_TYPE_PLAIN  "[ WARNING ] "
-#define INFO_TYPE_PLAIN     "[ INFO ] "
-#define OK_TYPE_PLAIN       "[ OK ] "
-#define SUCCESS_TYPE_PLAIN  "[ SUCCESS ] "
+#define ERROR_TYPE_PLAIN    "[ERROR] "
+#define WARNING_TYPE_PLAIN  "[WARNING] "
+#define INFO_TYPE_PLAIN     "[INFO] "
+#define OK_TYPE_PLAIN       "[OK] "
+#define SUCCESS_TYPE_PLAIN  "[SUCCESS] "
 
 /************************************************************************/
 
@@ -98,8 +107,10 @@ class DEBUG {
     public:
 
         // Constructor: can enable/disable timestamp and color output globally
-        DEBUG(UART_HandleTypeDef *huart, bool enable_timestamp = true, bool enable_color = true);
+        DEBUG(UART_HandleTypeDef *huart, bool enable_timestamp = true, bool enable_color = true, bool enable_filename_line = false);
+    
 
+    #if __cplusplus < 202002L
         // Basic formatted log
         void log(const char* format, ...);
 
@@ -112,14 +123,59 @@ class DEBUG {
         void ok(const char* format, ...);
         void success(const char* format, ...);
         void info(const char* format, ...);
+    #else
+        // Basic formatted log (captures caller location)
+        void log(const char* format, std::source_location loc = std::source_location::current(), ...);
+
+        // Log with a type prefix
+        void logWithType(const char* type, const char* format, std::source_location loc = std::source_location::current(), ...);
+
+        // Convenience helpers
+        void error(const char* format, std::source_location loc = std::source_location::current(), ...);
+        void warning(const char* format, std::source_location loc = std::source_location::current(), ...);
+        void ok(const char* format, std::source_location loc = std::source_location::current(), ...);
+        void success(const char* format, std::source_location loc = std::source_location::current(), ...);
+        void info(const char* format, std::source_location loc = std::source_location::current(), ...);
+    #endif
 
         inline void setTimestampEnabled(bool enabled) { _timestamp_enabled = enabled; }
         inline void setColorEnabled(bool enabled) { _color_enabled = enabled; }
+
+        #if __cplusplus >= 202002L
+        inline void setFilenameLineEnabled(bool enabled) { _filename_line_enabled = enabled; }
+        #endif
 
     private:
         UART_HandleTypeDef *_huart;
         bool _timestamp_enabled;
         bool _color_enabled;
 
+        #if __cplusplus >= 202002L
+        bool _filename_line_enabled;
+        #endif
+        
         void _send(const char* text);
+
+    // #if !__cpp_lib_source_location
+    //     // If compiler doesn't support c++20 source_location, use macro to log with file and line number
+    //     void _log(const char* file, int line, const char* format, ...);
+    //     void _logWithType(const char* file, int line, const char* type, const char* format, ...);
+    //     void _error(const char* file, int line, const char* format, ...);
+    //     void _warning(const char* file, int line, const char* format, ...);
+    //     void _ok(const char* file, int line, const char* format, ...);
+    //     void _success(const char* file, int line, const char* format, ...);
+    //     void _info(const char* file, int line, const char* format, ...);
+    // #endif
 };
+
+// #if !__cpp_lib_source_location
+
+// #define dbg_log(dbg_inst, ...)           (dbg_inst)._log(__FILE__, __LINE__, __VA_ARGS__)
+// #define dbg_info(dbg_inst, ...)          (dbg_inst)._info(__FILE__, __LINE__, __VA_ARGS__)
+// #define dbg_error(dbg_inst, ...)         (dbg_inst)._error(__FILE__, __LINE__, __VA_ARGS__)
+// #define dbg_warning(dbg_inst, ...)       (dbg_inst)._warning(__FILE__, __LINE__, __VA_ARGS__)
+// #define dbg_ok(dbg_inst, ...)            (dbg_inst)._ok(__FILE__, __LINE__, __VA_ARGS__)
+// #define dbg_success(dbg_inst, ...)       (dbg_inst)._success(__FILE__, __LINE__, __VA_ARGS__)
+// #define dbg_logtype(dbg_inst, type, ...) (dbg_inst)._logWithType(__FILE__, __LINE__, type, __VA_ARGS__)
+
+// #endif

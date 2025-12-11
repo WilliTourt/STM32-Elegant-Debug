@@ -12,92 +12,17 @@
  *
  * @author:    WilliTourt <willitourt@foxmail.com>
  * @date:      2025-12-10
+ * 
+ * @changelog:
+ * - 2025-12-10: Initial release.
+ * - 2025-12-11: Added support for filename and ln number in log messages. But
+ *               this feature is not available below C++20.
  ******************************************************************************/
 
 #include "debug.h"
 
-DEBUG::DEBUG(UART_HandleTypeDef *huart, bool enable_timestamp, bool enable_color)
-    : _huart(huart), _timestamp_enabled(enable_timestamp), _color_enabled(enable_color) {}
-
-void DEBUG::log(const char* format, ...) {
-    char msg[DEBUG_BUFFER_LEN];
-    va_list args;
-    va_start(args, format);
-    vsnprintf(msg, sizeof(msg), format, args);
-    va_end(args);
-    _send(msg);
-}
-
-void DEBUG::logWithType(const char* type, const char* format, ...) {
-    char msg[DEBUG_BUFFER_LEN];
-    va_list args;
-    va_start(args, format);
-    vsnprintf(msg, sizeof(msg), format, args);
-    va_end(args);
-    char combined[DEBUG_BUFFER_LEN + 32];
-    snprintf(combined, sizeof(combined), "[ %s ] %s", type, msg);
-    _send(combined);
-}
-
-void DEBUG::error(const char* format, ...) {
-    char msg[DEBUG_BUFFER_LEN];
-    va_list args;
-    va_start(args, format);
-    vsnprintf(msg, sizeof(msg), format, args);
-    va_end(args);
-    const char* prefix = _color_enabled ? ERROR_TYPE : ERROR_TYPE_PLAIN;
-    char combined[DEBUG_BUFFER_LEN + 32];
-    snprintf(combined, sizeof(combined), "%s%s", prefix, msg);
-    _send(combined);
-}
-
-void DEBUG::warning(const char* format, ...) {
-    char msg[DEBUG_BUFFER_LEN];
-    va_list args;
-    va_start(args, format);
-    vsnprintf(msg, sizeof(msg), format, args);
-    va_end(args);
-    const char* prefix = _color_enabled ? WARNING_TYPE : WARNING_TYPE_PLAIN;
-    char combined[DEBUG_BUFFER_LEN + 32];
-    snprintf(combined, sizeof(combined), "%s%s", prefix, msg);
-    _send(combined);
-}
-
-void DEBUG::ok(const char* format, ...) {
-    char msg[DEBUG_BUFFER_LEN];
-    va_list args;
-    va_start(args, format);
-    vsnprintf(msg, sizeof(msg), format, args);
-    va_end(args);
-    const char* prefix = _color_enabled ? OK_TYPE : OK_TYPE_PLAIN;
-    char combined[DEBUG_BUFFER_LEN + 32];
-    snprintf(combined, sizeof(combined), "%s%s", prefix, msg);
-    _send(combined);
-}
-
-void DEBUG::success(const char* format, ...) {
-    char msg[DEBUG_BUFFER_LEN];
-    va_list args;
-    va_start(args, format);
-    vsnprintf(msg, sizeof(msg), format, args);
-    va_end(args);
-    const char* prefix = _color_enabled ? SUCCESS_TYPE : SUCCESS_TYPE_PLAIN;
-    char combined[DEBUG_BUFFER_LEN + 32];
-    snprintf(combined, sizeof(combined), "%s%s", prefix, msg);
-    _send(combined);
-}
-
-void DEBUG::info(const char* format, ...) {
-    char msg[DEBUG_BUFFER_LEN];
-    va_list args;
-    va_start(args, format);
-    vsnprintf(msg, sizeof(msg), format, args);
-    va_end(args);
-    const char* prefix = _color_enabled ? INFO_TYPE : INFO_TYPE_PLAIN;
-    char combined[DEBUG_BUFFER_LEN + 32];
-    snprintf(combined, sizeof(combined), "%s%s", prefix, msg);
-    _send(combined);
-}
+DEBUG::DEBUG(UART_HandleTypeDef *huart, bool enable_timestamp, bool enable_color, bool enable_filename_line)
+    : _huart(huart), _timestamp_enabled(enable_timestamp), _color_enabled(enable_color), _filename_line_enabled(enable_filename_line) {}
 
 void DEBUG::_send(const char* text) {
     char out[DEBUG_BUFFER_LEN * 2];
@@ -118,3 +43,325 @@ void DEBUG::_send(const char* text) {
     out[sizeof(out) - 1] = '\0';
     HAL_UART_Transmit(_huart, (uint8_t*)out, (uint16_t)strlen(out), HAL_MAX_DELAY);
 }
+
+
+
+#if __cplusplus >= 202002L
+void DEBUG::log(const char* format, std::source_location loc, ...) {
+    char msg[DEBUG_BUFFER_LEN];
+    va_list args;
+    va_start(args, loc);
+    vsnprintf(msg, sizeof(msg), format, args);
+    va_end(args);
+    char combined[DEBUG_BUFFER_LEN + 64];
+    if (_filename_line_enabled) {
+        snprintf(combined, sizeof(combined), "[%s:%ld] %s", loc.file_name(), loc.line(), msg);
+    } else {
+        strncpy(combined, msg, sizeof(combined) - 1);
+        combined[sizeof(combined) - 1] = '\0';
+    }
+    _send(combined);
+}
+#else
+void DEBUG::log(const char* format, ...) {
+    char msg[DEBUG_BUFFER_LEN];
+    va_list args;
+    va_start(args, format);
+    vsnprintf(msg, sizeof(msg), format, args);
+    va_end(args);
+    _send(msg);
+}
+#endif
+
+#if __cplusplus >= 202002L
+void DEBUG::logWithType(const char* type, const char* format, std::source_location loc, ...) {
+    char msg[DEBUG_BUFFER_LEN];
+    va_list args;
+    va_start(args, loc);
+    vsnprintf(msg, sizeof(msg), format, args);
+    va_end(args);
+    char combined[DEBUG_BUFFER_LEN + 96];
+    if (_filename_line_enabled) {
+        snprintf(combined, sizeof(combined), "[%s] [%s:%ld] %s", type, loc.file_name(), loc.line(), msg);
+    } else {
+        snprintf(combined, sizeof(combined), "[%s] %s", type, msg);
+    }
+    _send(combined);
+}
+#else
+void DEBUG::logWithType(const char* type, const char* format, ...) {
+    char msg[DEBUG_BUFFER_LEN];
+    va_list args;
+    va_start(args, format);
+    vsnprintf(msg, sizeof(msg), format, args);
+    va_end(args);
+    char combined[DEBUG_BUFFER_LEN + 32];
+    snprintf(combined, sizeof(combined), "[%s] %s", type, msg);
+    _send(combined);
+}
+#endif
+
+#if __cplusplus >= 202002L
+void DEBUG::error(const char* format, std::source_location loc, ...) {
+    char msg[DEBUG_BUFFER_LEN];
+    va_list args;
+    va_start(args, loc);
+    vsnprintf(msg, sizeof(msg), format, args);
+    va_end(args);
+    const char* prefix = _color_enabled ? ERROR_TYPE : ERROR_TYPE_PLAIN;
+    char combined[DEBUG_BUFFER_LEN + 96];
+    if (_filename_line_enabled) {
+        snprintf(combined, sizeof(combined), "%s[%s:%ld] %s", prefix, loc.file_name(), loc.line(), msg);
+    } else {
+        snprintf(combined, sizeof(combined), "%s%s", prefix, msg);
+    }
+    _send(combined);
+}
+#else
+void DEBUG::error(const char* format, ...) {
+    char msg[DEBUG_BUFFER_LEN];
+    va_list args;
+    va_start(args, format);
+    vsnprintf(msg, sizeof(msg), format, args);
+    va_end(args);
+    const char* prefix = _color_enabled ? ERROR_TYPE : ERROR_TYPE_PLAIN;
+    char combined[DEBUG_BUFFER_LEN + 32];
+    snprintf(combined, sizeof(combined), "%s%s", prefix, msg);
+    _send(combined);
+}
+#endif
+
+#if __cplusplus >= 202002L
+void DEBUG::warning(const char* format, std::source_location loc, ...) {
+    char msg[DEBUG_BUFFER_LEN];
+    va_list args;
+    va_start(args, loc);
+    vsnprintf(msg, sizeof(msg), format, args);
+    va_end(args);
+    const char* prefix = _color_enabled ? WARNING_TYPE : WARNING_TYPE_PLAIN;
+    char combined[DEBUG_BUFFER_LEN + 96];
+    if (_filename_line_enabled) {
+        snprintf(combined, sizeof(combined), "%s[%s:%ld] %s", prefix, loc.file_name(), loc.line(), msg);
+    } else {
+        snprintf(combined, sizeof(combined), "%s%s", prefix, msg);
+    }
+    _send(combined);
+}
+#else
+void DEBUG::warning(const char* format, ...) {
+    char msg[DEBUG_BUFFER_LEN];
+    va_list args;
+    va_start(args, format);
+    vsnprintf(msg, sizeof(msg), format, args);
+    va_end(args);
+    const char* prefix = _color_enabled ? WARNING_TYPE : WARNING_TYPE_PLAIN;
+    char combined[DEBUG_BUFFER_LEN + 32];
+    snprintf(combined, sizeof(combined), "%s%s", prefix, msg);
+    _send(combined);
+}
+#endif
+
+#if __cplusplus >= 202002L
+void DEBUG::ok(const char* format, std::source_location loc, ...) {
+    char msg[DEBUG_BUFFER_LEN];
+    va_list args;
+    va_start(args, loc);
+    vsnprintf(msg, sizeof(msg), format, args);
+    va_end(args);
+    const char* prefix = _color_enabled ? OK_TYPE : OK_TYPE_PLAIN;
+    char combined[DEBUG_BUFFER_LEN + 96];
+    if (_filename_line_enabled) {
+        snprintf(combined, sizeof(combined), "%s[%s:%ld] %s", prefix, loc.file_name(), loc.line(), msg);
+    } else {
+        snprintf(combined, sizeof(combined), "%s%s", prefix, msg);
+    }
+    _send(combined);
+}
+#else
+void DEBUG::ok(const char* format, ...) {
+    char msg[DEBUG_BUFFER_LEN];
+    va_list args;
+    va_start(args, format);
+    vsnprintf(msg, sizeof(msg), format, args);
+    va_end(args);
+    const char* prefix = _color_enabled ? OK_TYPE : OK_TYPE_PLAIN;
+    char combined[DEBUG_BUFFER_LEN + 32];
+    snprintf(combined, sizeof(combined), "%s%s", prefix, msg);
+    _send(combined);
+}
+#endif
+
+#if __cplusplus >= 202002L
+void DEBUG::success(const char* format, std::source_location loc, ...) {
+    char msg[DEBUG_BUFFER_LEN];
+    va_list args;
+    va_start(args, loc);
+    vsnprintf(msg, sizeof(msg), format, args);
+    va_end(args);
+    const char* prefix = _color_enabled ? SUCCESS_TYPE : SUCCESS_TYPE_PLAIN;
+    char combined[DEBUG_BUFFER_LEN + 96];
+    if (_filename_line_enabled) {
+        snprintf(combined, sizeof(combined), "%s[%s:%ld] %s", prefix, loc.file_name(), loc.line(), msg);
+    } else {
+        snprintf(combined, sizeof(combined), "%s%s", prefix, msg);
+    }
+    _send(combined);
+}
+#else
+void DEBUG::success(const char* format, ...) {
+    char msg[DEBUG_BUFFER_LEN];
+    va_list args;
+    va_start(args, format);
+    vsnprintf(msg, sizeof(msg), format, args);
+    va_end(args);
+    const char* prefix = _color_enabled ? SUCCESS_TYPE : SUCCESS_TYPE_PLAIN;
+    char combined[DEBUG_BUFFER_LEN + 32];
+    snprintf(combined, sizeof(combined), "%s%s", prefix, msg);
+    _send(combined);
+}
+#endif
+
+#if __cplusplus >= 202002L
+void DEBUG::info(const char* format, std::source_location loc, ...) {
+    char msg[DEBUG_BUFFER_LEN];
+    va_list args;
+    va_start(args, loc);
+    vsnprintf(msg, sizeof(msg), format, args);
+    va_end(args);
+    const char* prefix = _color_enabled ? INFO_TYPE : INFO_TYPE_PLAIN;
+    char combined[DEBUG_BUFFER_LEN + 96];
+    if (_filename_line_enabled) {
+        snprintf(combined, sizeof(combined), "%s[%s:%ld] %s", prefix, loc.file_name(), loc.line(), msg);
+    } else {
+        snprintf(combined, sizeof(combined), "%s%s", prefix, msg);
+    }
+    _send(combined);
+}
+#else
+void DEBUG::info(const char* format, ...) {
+    char msg[DEBUG_BUFFER_LEN];
+    va_list args;
+    va_start(args, format);
+    vsnprintf(msg, sizeof(msg), format, args);
+    va_end(args);
+    const char* prefix = _color_enabled ? INFO_TYPE : INFO_TYPE_PLAIN;
+    char combined[DEBUG_BUFFER_LEN + 32];
+    snprintf(combined, sizeof(combined), "%s%s", prefix, msg);
+    _send(combined);
+}
+#endif
+
+
+/* Deprecated functions, originally for macro-based logging *************************************
+
+void DEBUG::_log(const char* file, int line, const char* format, ...) {
+    char msg[DEBUG_BUFFER_LEN];
+    va_list args;
+    va_start(args, format);
+    vsnprintf(msg, sizeof(msg), format, args);
+    va_end(args);
+    char combined[DEBUG_BUFFER_LEN + 64];
+    if (_filename_line_enabled) {
+        snprintf(combined, sizeof(combined), "[%s:%d] %s", file, line, msg);
+    } else {
+        strncpy(combined, msg, sizeof(combined) - 1);
+        combined[sizeof(combined) - 1] = '\0';
+    }
+    _send(combined);
+}
+
+void DEBUG::_logWithType(const char* file, int line, const char* type, const char* format, ...) {
+    char msg[DEBUG_BUFFER_LEN];
+    va_list args;
+    va_start(args, format);
+    vsnprintf(msg, sizeof(msg), format, args);
+    va_end(args);
+    char combined[DEBUG_BUFFER_LEN + 96];
+    if (_filename_line_enabled) {
+        snprintf(combined, sizeof(combined), "[ %s ] [%s:%d] %s", file, line, type, msg);
+    } else {
+        snprintf(combined, sizeof(combined), "[ %s ] %s", type, msg);
+    }
+    _send(combined);
+}
+
+void DEBUG::_error(const char* file, int line, const char* format, ...) {
+    char msg[DEBUG_BUFFER_LEN];
+    va_list args;
+    va_start(args, format);
+    vsnprintf(msg, sizeof(msg), format, args);
+    va_end(args);
+    const char* prefix = _color_enabled ? ERROR_TYPE : ERROR_TYPE_PLAIN;
+    char combined[DEBUG_BUFFER_LEN + 96];
+    if (_filename_line_enabled) {
+        snprintf(combined, sizeof(combined), "%s[%s:%d] %s", prefix, file, line, msg);
+    } else {
+        snprintf(combined, sizeof(combined), "%s%s", prefix, msg);
+    }
+    _send(combined);
+}
+
+void DEBUG::_warning(const char* file, int line, const char* format, ...) {
+    char msg[DEBUG_BUFFER_LEN];
+    va_list args;
+    va_start(args, format);
+    vsnprintf(msg, sizeof(msg), format, args);
+    va_end(args);
+    const char* prefix = _color_enabled ? WARNING_TYPE : WARNING_TYPE_PLAIN;
+    char combined[DEBUG_BUFFER_LEN + 96];
+    if (_filename_line_enabled) {
+        snprintf(combined, sizeof(combined), "%s[%s:%d] %s", prefix, file, line, msg);
+    } else {
+        snprintf(combined, sizeof(combined), "%s%s", prefix, msg);
+    }
+    _send(combined);
+}
+
+void DEBUG::_ok(const char* file, int line, const char* format, ...) {
+    char msg[DEBUG_BUFFER_LEN];
+    va_list args;
+    va_start(args, format);
+    vsnprintf(msg, sizeof(msg), format, args);
+    va_end(args);
+    const char* prefix = _color_enabled ? OK_TYPE : OK_TYPE_PLAIN;
+    char combined[DEBUG_BUFFER_LEN + 96];
+    if (_filename_line_enabled) {
+        snprintf(combined, sizeof(combined), "%s[%s:%d] %s", prefix, file, line, msg);
+    } else {
+        snprintf(combined, sizeof(combined), "%s%s", prefix, msg);
+    }
+    _send(combined);
+}
+
+void DEBUG::_success(const char* file, int line, const char* format, ...) {
+    char msg[DEBUG_BUFFER_LEN];
+    va_list args;
+    va_start(args, format);
+    vsnprintf(msg, sizeof(msg), format, args);
+    va_end(args);
+    const char* prefix = _color_enabled ? SUCCESS_TYPE : SUCCESS_TYPE_PLAIN;
+    char combined[DEBUG_BUFFER_LEN + 96];
+    if (_filename_line_enabled) {
+        snprintf(combined, sizeof(combined), "%s[%s:%d] %s", prefix, file, line, msg);
+    } else {
+        snprintf(combined, sizeof(combined), "%s%s", prefix, msg);
+    }
+    _send(combined);
+}
+
+void DEBUG::_info(const char* file, int line, const char* format, ...) {
+    char msg[DEBUG_BUFFER_LEN];
+    va_list args;
+    va_start(args, format);
+    vsnprintf(msg, sizeof(msg), format, args);
+    va_end(args);
+    const char* prefix = _color_enabled ? INFO_TYPE : INFO_TYPE_PLAIN;
+    char combined[DEBUG_BUFFER_LEN + 96];
+    if (_filename_line_enabled) {
+        snprintf(combined, sizeof(combined), "%s[%s:%d] %s", prefix, file, line, msg);
+    } else {
+        snprintf(combined, sizeof(combined), "%s%s", prefix, msg);
+    }
+    _send(combined);
+}
+*********************************************************************************************/
