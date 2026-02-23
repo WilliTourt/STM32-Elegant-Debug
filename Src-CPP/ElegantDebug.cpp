@@ -1,6 +1,6 @@
 /*******************************************************************************
  * @file    ElegantDebug.cpp
- * @version 1.1
+ * @version 1.2
  * @brief   C++ implementation for ANSI-colored debug logging on STM32.
  *
  * Implements the `ElegantDebug` class declared in `Src-CPP/debug.h`. The class
@@ -12,7 +12,7 @@
  * `info(),` `error()`, etc. See README for examples and integration notes.
  *
  * @author:    WilliTourt <willitourt@foxmail.com>
- * @date:      2025-12-10
+ * @date:      2026-2-22
  * 
  * @changelog:
  * - (See header file)
@@ -21,11 +21,24 @@
 #include "ElegantDebug.h"
 
 #if __cplusplus < 202002L
+    ElegantDebug::ElegantDebug(bool enable_timestamp, bool enable_color) :
+        _timestamp_enabled(enable_timestamp), _color_enabled(enable_color) {}
+
     ElegantDebug::ElegantDebug(UART_HandleTypeDef *huart, bool enable_timestamp, bool enable_color) :
         _huart(huart), _timestamp_enabled(enable_timestamp), _color_enabled(enable_color) {}
 #else
-    ElegantDebug::ElegantDebug(UART_HandleTypeDef *huart, bool enable_timestamp, bool enable_color, bool enable_filename_line) :
-        _huart(huart), _timestamp_enabled(enable_timestamp), _color_enabled(enable_color), _filename_line_enabled(enable_filename_line) {}
+    ElegantDebug::ElegantDebug(bool enable_timestamp, bool enable_color,
+                               bool enable_filename_line) :
+                               _timestamp_enabled(enable_timestamp),
+                               _color_enabled(enable_color),
+                               _filename_line_enabled(enable_filename_line) {}
+
+    ElegantDebug::ElegantDebug(UART_HandleTypeDef *huart, bool enable_timestamp,
+                               bool enable_color, bool enable_filename_line) :
+                               _huart(huart),
+                               _timestamp_enabled(enable_timestamp),
+                               _color_enabled(enable_color),
+                               _filename_line_enabled(enable_filename_line) {}
 #endif
 
 void ElegantDebug::_send(const char* text) {
@@ -45,7 +58,12 @@ void ElegantDebug::_send(const char* text) {
     // append text safely
     strncpy(out + pos, text, sizeof(out) - pos - 1);
     out[sizeof(out) - 1] = '\0';
-    HAL_UART_Transmit(_huart, (uint8_t*)out, (uint16_t)strlen(out), HAL_MAX_DELAY);
+
+    #if (USB_AS_DEBUG_PORT == 1)
+        CDC_Transmit_FS((uint8_t*)out, (uint16_t)strlen(out));
+    #else
+        HAL_UART_Transmit(_huart, (uint8_t*)out, (uint16_t)strlen(out), HAL_MAX_DELAY);
+    #endif
 }
 
 

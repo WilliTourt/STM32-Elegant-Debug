@@ -1,6 +1,6 @@
 /*******************************************************************************
  * @file    ElegantDebug.h
- * @version 1.1
+ * @version 1.2
  * @brief   ANSI-colored debug logging for STM32 (C++ header).
  *
  * This header declares the C++ `ElegantDebug` class used to send formatted log
@@ -18,7 +18,7 @@
  *   - See repository README for examples and integration instructions.
  *
  * @author:    WilliTourt <willitourt@foxmail.com>
- * @date:      2025-12-10
+ * @date:      2026-2-22
  * 
  * @changelog:
  * - 2025-12-10: Initial release.
@@ -26,10 +26,19 @@
  *               But this feature is not available below C++20.
  *               Allowed custom styles for type prefix in logWithType().
  *               Added more ANSI escape codes for color/style.
+ * - 2026-2-22:  Added USB-CDC support. Now you can enable USB-CDC in CubeMX and use
+ *               the same code to log messages over USB port. Need to set
+ *               'USB_AS_DEBUG_PORT' macro to 1.
  * 
  ******************************************************************************/
 
 #pragma once
+
+
+
+#define USB_AS_DEBUG_PORT true // Set to 1 to use USB-CDC as debug port. 0 for UART
+
+
 
 #include "main.h"
 
@@ -56,6 +65,9 @@
 #error "At least one serial port should be opened"
 #endif
 
+#if (USB_AS_DEBUG_PORT == 1)
+    #include "usbd_cdc_if.h"
+#endif
 
 /* ANSI escape codes for output *****************************************/
 
@@ -132,9 +144,12 @@ class ElegantDebug {
 
         // Constructor: can enable/disable timestamp and color output globally
         #if __cplusplus < 202002L
+            ElegantDebug(bool enable_timestamp = true, bool enable_color = true);
             ElegantDebug(UART_HandleTypeDef *huart,
                          bool enable_timestamp = true, bool enable_color = true);
         #else
+            ElegantDebug(bool enable_timestamp = true, bool enable_color = true,
+                         bool enable_filename_line = false);
             ElegantDebug(UART_HandleTypeDef *huart, bool enable_timestamp = true,
                          bool enable_color = true, bool enable_filename_line = false);
         #endif

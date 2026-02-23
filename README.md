@@ -124,6 +124,9 @@ For more information about ANSI escape codes, refer to: [ANSI escape code - Hand
 - **New**: Supports more ANSI colors and styles
 - **Improvement**: Updated API documentation to accurately reflect actual functionality
 
+### v1.2 (2026-02-22)
+- **New**: This library now supports USB-CDC output. To use this feature, simply enable the USB_DEVICE middleware in your MX configuration and set USB to CDC class. Then define `USB_AS_DEBUG_PORT` to `1` in the library's header file.
+
 ## License
 - See the `LICENSE` file at the repository root for licensing details.
 

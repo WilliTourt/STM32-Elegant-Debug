@@ -127,6 +127,9 @@ COLOR_RED, CLR_TEXT_COLOR, ITALIC, COLOR_GREEN, CLR_ITALIC, CLR);
 - **新增**: 支持更多的ANSI颜色和样式
 - **改进**: 更新API文档，更准确地反映实际功能
 
+### v1.2 (2026-02-22)
+- **新增**: 此库现在支持USB-CDC输出。要使用此功能，只需打开MX配置中的USB_DEVICE中间件，将USB设置为CDC类。然后在此库头文件中将 `USB_AS_DEBUG_PORT` 定义为 `1` 即可。
+
 ## 其他
 
 > 此库灵感最初源于学长Zodiak_Jealously的提议 ;p
