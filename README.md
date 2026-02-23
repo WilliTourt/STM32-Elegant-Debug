@@ -32,6 +32,9 @@
 #include "ElegantDebug.h"
 
 /* Initialize at an appropriate place (e.g. in main()) */
+// When USB-CDC is configured as the debug port (compile-time macro
+// `USB_AS_DEBUG_PORT` set to 1), the `huart` argument can be NULL and 
+// will be ignored by the library.
 debug_init(&huart1, true /* enable timestamp */, true /* enable color */, false /* enable filename line */);
 
 /* Usage examples */

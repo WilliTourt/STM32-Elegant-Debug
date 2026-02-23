@@ -32,6 +32,8 @@
 #include "ElegantDebug.h"
 
 /* 在合适的位置（比如 main() 里）初始化 */
+// 如果 USB-CDC 被设置为调试端口（编译时宏 `USB_AS_DEBUG_PORT` 为 1），
+// `huart` 参数可以传 NULL，库会忽略它。
 debug_init(&huart1, true /* enable timestamp */, true /* enable color */, false /* enable filename line */);
 
 /* 使用示例 */

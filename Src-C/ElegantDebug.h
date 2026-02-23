@@ -150,6 +150,11 @@ extern "C" {
 #define DEBUG_BUFFER_LEN 256
 
 // Initialize the library; MUST be called before other functions.
+//
+// If `USB_AS_DEBUG_PORT` is set to 1 (USB-CDC output enabled at compile time),
+// the `huart` pointer is ignored and may be passed as NULL. When using UART as
+// the debug port, a valid `UART_HandleTypeDef *` must be provided or the
+// functions will no-op.
 void debug_init(UART_HandleTypeDef *huart, bool enable_timestamp, bool enable_color, bool enable_filename_line);
 
 // Basic formatted log

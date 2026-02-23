@@ -33,7 +33,11 @@ void debug_init(UART_HandleTypeDef *huart, bool enable_timestamp, bool enable_co
 }
 
 static void _send(const char* text) {
-	if (_huart == NULL || text == NULL) return;
+    #if (USB_AS_DEBUG_PORT == 1)
+        if (text == NULL) return;
+    #else
+        if (_huart == NULL || text == NULL) return;
+    #endif
 
 	char out[DEBUG_BUFFER_LEN * 2];
 	size_t pos = 0;
