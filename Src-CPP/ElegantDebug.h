@@ -4,9 +4,9 @@
  * @brief   ANSI-colored debug logging for STM32 (C++ header).
  *
  * This header declares the C++ `ElegantDebug` class used to send formatted log
- * messages over a HAL UART interface. The class supports optional timestamps
- * and ANSI color output for terminals that support it. A functionally
- * equivalent C implementation is provided under `Src-C/`.
+ * messages over a HAL UART interface or USB-CDC interface. The class supports
+ * optional timestamps and ANSI color output for terminals that support it.
+ * A functionally equivalent C implementation is provided under `Src-C/`.
  *
  * Usage:
  *   - Include this header in your C++ source and construct `ElegantDebug` with a
@@ -36,7 +36,7 @@
 
 
 
-#define USB_AS_DEBUG_PORT true // Set to 1 to use USB-CDC as debug port. 0 for UART
+#define USB_AS_DEBUG_PORT false // Set to 1 to use USB-CDC as debug port. 0 for UART
 
 
 

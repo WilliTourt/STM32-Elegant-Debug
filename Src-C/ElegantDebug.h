@@ -1,6 +1,6 @@
 /*******************************************************************************
  * @file    ElegantDebug.h
- * @version 1.1
+ * @version 1.2
  * @brief   C API for ANSI-colored debug logging on STM32 (header).
  *
  * This header provides a small C-friendly API that mirrors the C++
@@ -18,7 +18,7 @@
  *   debug_info("Hello from STM32!\n");
  *
  * @author:    WilliTourt <willitourt@foxmail.com>
- * @date:      2025-12-10
+ * @date:      2026-02-22
  * 
  * @changelog:
  * - 2025-12-10: Initial release.
@@ -26,11 +26,24 @@
  *               But this feature is not available below C++20.
  *               Allowed custom styles for type prefix in logWithType().
  *               Added more ANSI escape codes for color/style.
+ * - 2026-02-22: Added USB-CDC support; can redirect output to USB when
+ *               USB_AS_DEBUG_PORT macro set to 1. See C++ counterpart for
+ *               details.
  * 
  ******************************************************************************/
 
 #ifndef __ELEGANT_DEBUG_H
 #define __ELEGANT_DEBUG_H
+
+
+
+// Set this to 1 to route log output over the USB‑CDC port instead of the
+// UART peripheral. Requires STM32CubeMX generated USB device stack and a
+// definition of `CDC_Transmit_FS` (usually provided by `usbd_cdc_if.h`).
+// Leave at 0 (or `false`) to continue using HAL_UART_Transmit().
+#define USB_AS_DEBUG_PORT false
+
+
 
 #include "main.h"
 
@@ -52,6 +65,10 @@
 
 #if !defined(HAL_UART_MODULE_ENABLED)
 #error "At least one serial port should be opened"
+#endif
+
+#if (USB_AS_DEBUG_PORT == 1)
+    #include "usbd_cdc_if.h"
 #endif
 
 #ifdef __cplusplus

@@ -3,7 +3,7 @@
 > **Language/语言**: [English](README.md) | [简体中文](README-zh-CN.md)
 
 ## Introduction
-- A lightweight serial debug library suitable for both C and C++ projects on STM32 using the HAL drivers.
+- A lightweight serial/USB-CDC debug library suitable for both C and C++ projects on STM32 using the HAL drivers.
 - Features: 
   - Formatted output
   - Optional timestamp
@@ -19,8 +19,9 @@
 - C++ implementation is in `Src-CPP/`
 
 ## Quick Start
-- Depends on STM32Cube HAL and at least one UART enabled.
+- Depends on STM32Cube HAL and at least one UART enabled, or USB-CDC enabled (enable USB_DEVICE middleware in MX and set to CDC class).
 - The output buffer length is controlled by the `DEBUG_BUFFER_LEN` macro (default 256).
+- Output method (UART/USB) is controlled by the `USB_AS_DEBUG_PORT` macro (default 0 for UART; set to 1 for USB-CDC).
 
 1. Add `Src-C/ElegantDebug.h` and `Src-C/ElegantDebug.c` to your project (make sure `ElegantDebug.c` is compiled and linked).
    - Makefile/CMake: add `.../Src-C/ElegantDebug.c` to your `SRCS` / `target_sources`.

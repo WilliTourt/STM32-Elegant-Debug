@@ -1,17 +1,18 @@
 /*******************************************************************************
  * @file    ElegantDebug.c
- * @version 1.1
+ * @version 1.2
  * @brief   C implementation for ANSI-colored debug logging on STM32.
  *
  * Implements the C API declared in `Src-C/debug.h`. Provides formatted
- * logging functions that send output over a HAL UART interface. Supports
+ * logging functions that send output over a HAL UART interface; USB-CDC is
+ * also supported when `USB_AS_DEBUG_PORT` is enabled. Supports
  * optional timestamps (using `HAL_GetTick()`) and ANSI color prefixes.
  *
  * Make sure to call `debug_init()` with a valid `UART_HandleTypeDef *`
  * before using other functions in this file.
  *
  * @author:    WilliTourt <willitourt@foxmail.com>
- * @date:      2025-12-10
+ * @date:      2026-02-22
  * 
  * @changelog:
  * - (See header file)
@@ -57,7 +58,11 @@ static void _send(const char* text) {
 		out[sizeof(out) - 1] = '\0';
 	}
 
-	HAL_UART_Transmit(_huart, (uint8_t*)out, (uint16_t)strlen(out), HAL_MAX_DELAY);
+    #if (USB_AS_DEBUG_PORT == 1)
+        CDC_Transmit_FS((uint8_t*)out, (uint16_t)strlen(out));
+    #else
+        HAL_UART_Transmit(_huart, (uint8_t*)out, (uint16_t)strlen(out), HAL_MAX_DELAY);
+    #endif
 }
 
 void debug_log(const char* format, ...) {
