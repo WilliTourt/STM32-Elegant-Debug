@@ -92,6 +92,17 @@ debug_setFilenameLineEnabled(true);  // After enabling, error and warning messag
   - `void setColorEnabled(bool enabled);`
   - `void setFilenameLineEnabled(bool enabled);` (C++20 and above only)
 
+#### Note
+
+- `error` and `warning` methods cannot use mutable parameters because they need to obtain the calling location (file name and line number).
+```cpp
+	dbg.error("error test... %d\n", 12345); // Wrong
+	dbg.error("%serror test...\n", BOLD);   // Wrong
+	dbg.error("error test... \n");          // Correct
+
+    // The first two lines of code report a compilation error due to a parameter matching issue when default parameters and variable parameters are mixed.
+```
+
 ### About ANSI Escape Codes
 The color and style macros in the library are ANSI escape codes. If your terminal doesn't support them, you can disable color output at runtime and avoid using the `%s` formatting operations.
 
