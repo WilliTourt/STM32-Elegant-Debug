@@ -131,8 +131,14 @@ class ElegantDebug {
     public:
 
         // Constructor: can enable/disable timestamp and color output globally
-        ElegantDebug(UART_HandleTypeDef *huart, bool enable_timestamp = true, bool enable_color = true, bool enable_filename_line = false);
-    
+        #if __cplusplus < 202002L
+            ElegantDebug(UART_HandleTypeDef *huart,
+                         bool enable_timestamp = true, bool enable_color = true);
+        #else
+            ElegantDebug(UART_HandleTypeDef *huart, bool enable_timestamp = true,
+                         bool enable_color = true, bool enable_filename_line = false);
+        #endif
+
         // Basic formatted log
         void log(const char* format, ...);
 

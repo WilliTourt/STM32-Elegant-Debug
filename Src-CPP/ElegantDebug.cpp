@@ -20,8 +20,13 @@
 
 #include "ElegantDebug.h"
 
-ElegantDebug::ElegantDebug(UART_HandleTypeDef *huart, bool enable_timestamp, bool enable_color, bool enable_filename_line)
-    : _huart(huart), _timestamp_enabled(enable_timestamp), _color_enabled(enable_color), _filename_line_enabled(enable_filename_line) {}
+#if __cplusplus < 202002L
+    ElegantDebug::ElegantDebug(UART_HandleTypeDef *huart, bool enable_timestamp, bool enable_color) :
+        _huart(huart), _timestamp_enabled(enable_timestamp), _color_enabled(enable_color) {}
+#else
+    ElegantDebug::ElegantDebug(UART_HandleTypeDef *huart, bool enable_timestamp, bool enable_color, bool enable_filename_line) :
+        _huart(huart), _timestamp_enabled(enable_timestamp), _color_enabled(enable_color), _filename_line_enabled(enable_filename_line) {}
+#endif
 
 void ElegantDebug::_send(const char* text) {
     char out[DEBUG_BUFFER_LEN * 2];
