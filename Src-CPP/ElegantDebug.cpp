@@ -1,6 +1,6 @@
 /*******************************************************************************
  * @file    ElegantDebug.cpp
- * @version 1.2
+ * @version 1.3
  * @brief   C++ implementation for ANSI-colored debug logging on STM32.
  *
  * Implements the `ElegantDebug` class declared in `Src-CPP/debug.h`. The class
@@ -12,7 +12,7 @@
  * `info(),` `error()`, etc. See README for examples and integration notes.
  *
  * @author:    WilliTourt <willitourt@foxmail.com>
- * @date:      2026-2-22
+ * @date:      2026-03-01
  * 
  * @changelog:
  * - (See header file)
@@ -213,6 +213,20 @@ void ElegantDebug::info(const char* format, ...) {
     char combined[DEBUG_BUFFER_LEN + 32];
     snprintf(combined, sizeof(combined), "%s%s", prefix, msg);
     _send(combined);
+}
+
+
+// runtime helpers for 24‑bit ANSI colours; return a pointer to a static buffer
+const char* ElegantDebug::customTextColor(uint8_t r, uint8_t g, uint8_t b) {
+    static char ansi[24];
+    snprintf(ansi, sizeof(ansi), "\033[38;2;%u;%u;%um", (unsigned)r, (unsigned)g, (unsigned)b);
+    return ansi;
+}
+
+const char* ElegantDebug::customBgColor(uint8_t r, uint8_t g, uint8_t b) {
+    static char ansi[24];
+    snprintf(ansi, sizeof(ansi), "\033[48;2;%u;%u;%um", (unsigned)r, (unsigned)g, (unsigned)b);
+    return ansi;
 }
 
 

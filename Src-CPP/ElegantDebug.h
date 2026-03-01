@@ -1,6 +1,6 @@
 /*******************************************************************************
  * @file    ElegantDebug.h
- * @version 1.2
+ * @version 1.3
  * @brief   ANSI-colored debug logging for STM32 (C++ header).
  *
  * This header declares the C++ `ElegantDebug` class used to send formatted log
@@ -18,7 +18,7 @@
  *   - See repository README for examples and integration instructions.
  *
  * @author:    WilliTourt <willitourt@foxmail.com>
- * @date:      2026-2-22
+ * @date:      2026-03-01
  * 
  * @changelog:
  * - 2025-12-10: Initial release.
@@ -26,9 +26,12 @@
  *               But this feature is not available below C++20.
  *               Allowed custom styles for type prefix in logWithType().
  *               Added more ANSI escape codes for color/style.
- * - 2026-2-22:  Added USB-CDC support. Now you can enable USB-CDC in CubeMX and use
+ * - 2026-02-22: Added USB-CDC support. Now you can enable USB-CDC in CubeMX and use
  *               the same code to log messages over USB port. Need to set
  *               'USB_AS_DEBUG_PORT' macro to 1.
+ * - 2026-03-01: Modified `COLOR_CUSTOM(r,g,b)` macro implementation to use
+ *               `customTextColor(r,g,b)` public method. This allows to fill
+ *               in the color values at runtime. Background colors too.
  * 
  ******************************************************************************/
 
@@ -88,7 +91,8 @@
 #define COLOR_CYAN          "\033[96m"
 #define COLOR_WHITE         "\033[97m"
 
-#define COLOR_CUSTOM(r,g,b) "\033[38;2;" #r ";" #g ";" #b "m" // Custom 24-bit colors for text
+// #define COLOR_CUSTOM(r,g,b) "\033[38;2;" #r ";" #g ";" #b "m" // Custom 24-bit colors for text
+#define COLOR_CUSTOM(r,g,b) ElegantDebug::customTextColor(r,g,b)
 
 // Background colors
 #define BG_RED              "\033[41m"
@@ -99,7 +103,8 @@
 #define BG_CYAN             "\033[46m"
 #define BG_WHITE            "\033[47m"
 
-#define BG_COLOR_CUSTOM(r,g,b) "\033[48;2;" #r ";" #g ";" #b "m" // Custom 24-bit background colors
+// #define BG_COLOR_CUSTOM(r,g,b) "\033[48;2;" #r ";" #g ";" #b "m" // Custom 24-bit background colors
+#define BG_COLOR_CUSTOM(r,g,b) ElegantDebug::customBgColor(r,g,b)
 
 // Styles
 #define BOLD                "\033[1m"
@@ -174,6 +179,9 @@ class ElegantDebug {
         void error(const char* format, std::source_location loc = std::source_location::current(), ...);
         void warning(const char* format, std::source_location loc = std::source_location::current(), ...);
     #endif
+
+        static const char* customTextColor(uint8_t r, uint8_t g, uint8_t b);
+        static const char* customBgColor(uint8_t r, uint8_t g, uint8_t b);
 
         inline void setTimestampEnabled(bool enabled) { _timestamp_enabled = enabled; }
         inline void setColorEnabled(bool enabled) { _color_enabled = enabled; }

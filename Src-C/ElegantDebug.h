@@ -1,6 +1,6 @@
 /*******************************************************************************
  * @file    ElegantDebug.h
- * @version 1.2
+ * @version 1.3
  * @brief   C API for ANSI-colored debug logging on STM32 (header).
  *
  * This header provides a small C-friendly API that mirrors the C++
@@ -18,7 +18,7 @@
  *   debug_info("Hello from STM32!\n");
  *
  * @author:    WilliTourt <willitourt@foxmail.com>
- * @date:      2026-02-22
+ * @date:      2026-03-01
  * 
  * @changelog:
  * - 2025-12-10: Initial release.
@@ -29,6 +29,9 @@
  * - 2026-02-22: Added USB-CDC support; can redirect output to USB when
  *               USB_AS_DEBUG_PORT macro set to 1. See C++ counterpart for
  *               details.
+ * - 2026-03-01: Replaced `COLOR_CUSTOM(r,g,b)` macro implementation with `customTextColor(r,g,b)`
+ *               public method. This allows to fill in the color values at runtime.
+ *               Background colors too.
  * 
  ******************************************************************************/
 
@@ -98,7 +101,8 @@ extern "C" {
 #define _ED_STR_HELPER(x) #x
 #define _ED_STR(x) _ED_STR_HELPER(x)
 
-#define COLOR_CUSTOM(r,g,b) "\033[38;2;" _ED_STR(r) ";" _ED_STR(g) ";" _ED_STR(b) "m" // Custom 24-bit colors for text
+// Custom 24-bit colors for text.
+#define COLOR_CUSTOM(r,g,b) customTextColor(r,g,b)
 
 // Background colors
 #define BG_RED              "\033[41m"
@@ -109,7 +113,8 @@ extern "C" {
 #define BG_CYAN             "\033[46m"
 #define BG_WHITE            "\033[47m"
 
-#define BG_COLOR_CUSTOM(r,g,b) "\033[48;2;" _ED_STR(r) ";" _ED_STR(g) ";" _ED_STR(b) "m" // Custom 24-bit background colors
+// #define BG_COLOR_CUSTOM(r,g,b) "\033[48;2;" _ED_STR(r) ";" _ED_STR(g) ";" _ED_STR(b) "m" // Custom 24-bit background colors
+#define BG_COLOR_CUSTOM(r,g,b) customBgColor(r,g,b)
 
 // Styles
 #define BOLD                "\033[1m"
@@ -178,6 +183,13 @@ void debug_setTimestampEnabled(bool enabled);
 void debug_setColorEnabled(bool enabled);
 // Enable/disable showing filename:line when using the file/line variants or macros
 void debug_setFilenameLineEnabled(bool enabled);
+
+// helper functions generating ANSI escape sequences for variable 24-bit colors
+// they return a pointer to a static string which remains valid until the
+// next call. This allows using them inside printf/format strings just like
+// the `COLOR_CUSTOM`/`BG_COLOR_CUSTOM` macros but with runtime values.
+const char* customTextColor(uint8_t r, uint8_t g, uint8_t b);
+const char* customBgColor(uint8_t r, uint8_t g, uint8_t b);
 
 // Macros to automatically pass caller file/line
 #define debug_error(...)                debug_error_fileline(__FILE__, __LINE__, __VA_ARGS__)

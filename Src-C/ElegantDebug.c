@@ -1,6 +1,6 @@
 /*******************************************************************************
  * @file    ElegantDebug.c
- * @version 1.2
+ * @version 1.3
  * @brief   C implementation for ANSI-colored debug logging on STM32.
  *
  * Implements the C API declared in `Src-C/debug.h`. Provides formatted
@@ -12,7 +12,7 @@
  * before using other functions in this file.
  *
  * @author:    WilliTourt <willitourt@foxmail.com>
- * @date:      2026-02-22
+ * @date:      2026-03-01
  * 
  * @changelog:
  * - (See header file)
@@ -189,4 +189,20 @@ void debug_setColorEnabled(bool enabled) {
 
 void debug_setFilenameLineEnabled(bool enabled) {
 	_filename_line_enabled = enabled;
+}
+
+
+// helper functions generating ANSI escape sequences for variable 24-bit colors
+const char* customTextColor(uint8_t r, uint8_t g, uint8_t b) {
+    static char ansi[24];
+    // format: "\033[38;2;<r>;<g>;<b>m"
+    snprintf(ansi, sizeof(ansi), "\033[38;2;%u;%u;%um", r, g, b);
+    return ansi;
+}
+
+const char* customBgColor(uint8_t r, uint8_t g, uint8_t b) {
+    static char ansi[24];
+    // format: "\033[48;2;<r>;<g>;<b>m"
+    snprintf(ansi, sizeof(ansi), "\033[48;2;%u;%u;%um", r, g, b);
+    return ansi;
 }
