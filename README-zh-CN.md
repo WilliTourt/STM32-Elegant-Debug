@@ -12,7 +12,12 @@
   - 便捷的类型前缀（ERROR/WARNING/INFO/OK/SUCCESS）
 
 ![Example](example.png)
+
+支持错误信息文件名行号输出：
 ![Showing Filename and Line](example_fileline.png)
+
+支持自定义颜色输出：
+![Custom Color](example_customcolor.png)
 
 ## 文件结构（仓库）
 - C 版本放在 `Src-C/`
@@ -113,7 +118,7 @@ log("Hello World! %sI am RED!%s %s%sI am italic and GREEN!%s Now i cleared itali
 COLOR_RED, CLR_TEXT_COLOR, ITALIC, COLOR_GREEN, CLR_ITALIC, CLR);
 ```
 
-对于24位自定义颜色，请使用 `COLOR_CUSTOM(r,g,b)` 和 `BG_COLOR_CUSTOM(r,g,b)` 宏，其中 `r`、`g`、`b` 为0~255之间的整数。
+对于24位自定义颜色，请使用 `COLOR_CUSTOM(r,g,b)` 和 `BG_COLOR_CUSTOM(r,g,b)` 宏，其中 `r`、`g`、`b` 为0~255之间的整数。这些宏现在内部调用了运行时辅助函数，因此可以使用变量而非字面常量传递颜色值。
 
 关于 ANSI 转义码的更多信息，请参考：[ANSI escape code - Handwiki](https://handwiki.org/wiki/ANSI_escape_code)
 
@@ -143,6 +148,10 @@ COLOR_RED, CLR_TEXT_COLOR, ITALIC, COLOR_GREEN, CLR_ITALIC, CLR);
 
 ### v1.2 (2026-02-22)
 - **新增**: 此库现在支持USB-CDC输出。要使用此功能，只需打开MX配置中的USB_DEVICE中间件，将USB设置为CDC类。然后在此库头文件中将 `USB_AS_DEBUG_PORT` 定义为 `1` 即可。
+
+### v1.3 (2026-03-01)
+- **改进**: 现在自定义颜色可以传入运行时变量。这支持了更多样的用法，例如根据数字大小设置对应的渐变颜色（如简介处图）
+
 
 ## 其他
 

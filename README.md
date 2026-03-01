@@ -12,7 +12,12 @@
   - Convenient type prefixes (ERROR/WARNING/INFO/OK/SUCCESS)
 
 ![Example](example.png)
+
+Supports showing filename and line number for ERROR/WARNING messages:
 ![Showing Filename and Line](example_fileline.png)
+
+Supports customized 24-bit colors:
+![Custom Color](example_customcolor.png)
 
 ## Repository layout
 - C implementation is in `Src-C/`
@@ -141,6 +146,9 @@ For more information about ANSI escape codes, refer to: [ANSI escape code - Hand
 
 ### v1.2 (2026-02-22)
 - **New**: This library now supports USB-CDC output. To use this feature, simply enable the USB_DEVICE middleware in your MX configuration and set USB to CDC class. Then define `USB_AS_DEBUG_PORT` to `1` in the library's header file.
+
+### v1.3 (2026-03-01)
+- **Improvement**: Custom colors can now accept runtime variables. This enables more diverse usage, such as setting gradient colors based on numeric values (as shown in the example image).
 
 ## License
 - See the `LICENSE` file at the repository root for licensing details.
