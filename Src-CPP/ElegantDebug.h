@@ -77,8 +77,10 @@
 // all the macros of the STM32 series. If you encounter any, you are
 // welcome to submit a PR or issue!
 
-#if !defined(HAL_UART_MODULE_ENABLED)
-#error "At least one serial port should be opened"
+#if defined(HAL_UART_MODULE_ENABLED)
+    #include "usart.h"
+#else
+    #error "At least one serial port should be opened"
 #endif
 
 #if (USB_AS_DEBUG_PORT == 1)
