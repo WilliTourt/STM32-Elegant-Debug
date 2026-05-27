@@ -53,16 +53,29 @@
 #include <source_location>
 #endif
 
-#if !defined(__STM32F1xx_HAL_H) && \
+#if !defined(__STM32F0xx_HAL_H) && \
+    !defined(__STM32F1xx_HAL_H) && \
+    !defined(__STM32F2xx_HAL_H) && \
+    !defined(__STM32F3xx_HAL_H) && \
     !defined(__STM32F4xx_HAL_H) && \
     !defined(__STM32F7xx_HAL_H) && \
+    !defined(__STM32H5xx_HAL_H) && \
     !defined(__STM32H7xx_HAL_H) && \
+    !defined(__STM32L0xx_HAL_H) && \
+    !defined(__STM32L1xx_HAL_H) && \
     !defined(__STM32L4xx_HAL_H) && \
     !defined(__STM32G0xx_HAL_H) && \
+    !defined(__STM32G4xx_HAL_H) && \
     !defined(__STM32WBxx_HAL_H) && \
-    !defined(__STM32WLxx_HAL_H)
+    !defined(__STM32WLxx_HAL_H) && \
+    !defined(__STM32MP1xx_HAL_H) && \
+    !defined(STM32C0xx_HAL_H)
 #error "This debugging library can only be used with STM32Cube HAL drivers"
 #endif
+// If you encounter this compilation error when including this library
+// in a normal HAL project, it might be because I haven't fully listed
+// all the macros of the STM32 series. If you encounter any, you are
+// welcome to submit a PR or issue!
 
 #if !defined(HAL_UART_MODULE_ENABLED)
 #error "At least one serial port should be opened"
