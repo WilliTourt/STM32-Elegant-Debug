@@ -32,7 +32,7 @@
  * - 2026-03-01: Modified `COLOR_CUSTOM(r,g,b)` macro implementation to use
  *               `customTextColor(r,g,b)` public method. This allows to fill
  *               in the color values at runtime. Background colors too.
- * - 2026-07-16: Added uart support to Renesas RA family mcus.
+ * - 2026-07-16: Added uart support to Renesas RA family mcus (USE_RA_FSP).
  * 
  ******************************************************************************/
 
@@ -45,7 +45,7 @@
 // UNCOMMENT one of these macros before including this header:
 
 // #define USE_STM32_HAL    // STM32Cube HAL
-#define USE_RA_FSP       // Renesas RA FSP
+// #define USE_RA_FSP       // Renesas RA FSP
 
 
 
