@@ -5,7 +5,7 @@
  *
  * Implements the `ElegantDebug` class declared in `Src-CPP/debug.h`. The class
  * provides formatted logging helpers that send output over a HAL UART
- * interface. Optional timestamps (via `HAL_GetTick()`) and ANSI color
+ * interface. Optional timestamps (via `_getTick()`) and ANSI color
  * prefixes are supported for terminals that accept escape sequences.
  *
  * Usage: Construct `ElegantDebug` with a `UART_HandleTypeDef*` then call `log(),`
@@ -20,13 +20,28 @@
 
 #include "ElegantDebug.h"
 
+
+
+#if DEBUG_PLATFORM_RA
+volatile uint32_t _debug_tick_ms = 0;
+#endif
+
 #if __cplusplus < 202002L
+
+    #if DEBUG_PLATFORM_STM32
     ElegantDebug::ElegantDebug(bool enable_timestamp, bool enable_color) :
         _timestamp_enabled(enable_timestamp), _color_enabled(enable_color) {}
 
     ElegantDebug::ElegantDebug(UART_HandleTypeDef *huart, bool enable_timestamp, bool enable_color) :
         _huart(huart), _timestamp_enabled(enable_timestamp), _color_enabled(enable_color) {}
-#else
+    #elif DEBUG_PLATFORM_RA
+    ElegantDebug::ElegantDebug(uart_instance_t const *uart, bool enable_timestamp, bool enable_color) :
+    _uart(uart), _timestamp_enabled(enable_timestamp), _color_enabled(enable_color) {}
+    #endif
+
+#else // __cplusplus < 202002L
+
+    #if DEBUG_PLATFORM_STM32
     ElegantDebug::ElegantDebug(bool enable_timestamp, bool enable_color,
                                bool enable_filename_line) :
                                _timestamp_enabled(enable_timestamp),
@@ -39,13 +54,40 @@
                                _timestamp_enabled(enable_timestamp),
                                _color_enabled(enable_color),
                                _filename_line_enabled(enable_filename_line) {}
+    #elif DEBUG_PLATFORM_RA
+    ElegantDebug::ElegantDebug(uart_instance_t const *uart, bool enable_timestamp,
+                               bool enable_color, bool enable_filename_line) :
+                               _uart(uart),
+                              _timestamp_enabled(enable_timestamp),
+                              _color_enabled(enable_color),
+                              _filename_line_enabled(enable_filename_line) {}
+    #endif
+
+#endif // __cplusplus < 202002L
+
+#if DEBUG_PLATFORM_STM32
+ElegantDebug::~ElegantDebug() {
+    // STM32: UART lifecycle managed by CubeMX-generated code
+}
+#endif
+
+#if DEBUG_PLATFORM_RA
+ElegantDebug::~ElegantDebug() {
+    if (_uart != nullptr) {
+        #ifdef R_SCI_UART_H
+        R_SCI_UART_Close(const_cast<uart_instance_t*>(_uart));
+        #else
+        R_SCI_B_UART_Close(const_cast<uart_instance_t*>(_uart));
+        #endif
+    }
+}
 #endif
 
 void ElegantDebug::_send(const char* text) {
     char out[DEBUG_BUFFER_LEN * 2];
     size_t pos = 0;
-    if (_timestamp_enabled) { // Prefix timestamp [hh:mm:ss.mmm] using HAL_GetTick()
-        uint32_t ms = HAL_GetTick();
+    if (_timestamp_enabled) { // Prefix timestamp [hh:mm:ss.mmm] using _getTick()
+        uint32_t ms = _getTick();
         uint32_t s = ms / 1000U;
         uint32_t hours = s / 3600U;
         uint32_t minutes = (s % 3600U) / 60U;
@@ -59,13 +101,32 @@ void ElegantDebug::_send(const char* text) {
     strncpy(out + pos, text, sizeof(out) - pos - 1);
     out[sizeof(out) - 1] = '\0';
 
-    #if (USB_AS_DEBUG_PORT == 1)
+    #if DEBUG_PLATFORM_STM32
+        #if (USB_AS_DEBUG_PORT == 1)
         CDC_Transmit_FS((uint8_t*)out, (uint16_t)strlen(out));
-    #else
+        #else
         HAL_UART_Transmit(_huart, (uint8_t*)out, (uint16_t)strlen(out), HAL_MAX_DELAY);
+        #endif
+    #elif DEBUG_PLATFORM_RA
+        #ifdef R_SCI_UART_H
+        R_SCI_UART_Write(const_cast<uart_instance_t*>(_uart)->p_ctrl,
+                         (uint8_t*)out,
+                         (uint32_t)strlen(out));
+        #else
+        R_SCI_B_UART_Write(const_cast<uart_instance_t*>(_uart)->p_ctrl,
+                           (uint8_t*)out,
+                           (uint32_t)strlen(out));
+        #endif
     #endif
 }
 
+uint32_t ElegantDebug::_getTick() {
+    #if DEBUG_PLATFORM_STM32
+    return HAL_GetTick();
+    #elif DEBUG_PLATFORM_RA
+    return _debug_tick_ms;
+    #endif
+}
 
 
 void ElegantDebug::log(const char* format, ...) {

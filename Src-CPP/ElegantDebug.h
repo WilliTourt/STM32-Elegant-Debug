@@ -32,6 +32,7 @@
  * - 2026-03-01: Modified `COLOR_CUSTOM(r,g,b)` macro implementation to use
  *               `customTextColor(r,g,b)` public method. This allows to fill
  *               in the color values at runtime. Background colors too.
+ * - 2026-07-16: Added uart support to Renesas RA family mcus.
  * 
  ******************************************************************************/
 
@@ -39,52 +40,93 @@
 
 
 
-#define USB_AS_DEBUG_PORT false // Set to 1 to use USB-CDC as debug port. 0 for UART
+/*** Platform & Port selection ******************************************/
+
+// UNCOMMENT one of these macros before including this header:
+
+// #define USE_STM32_HAL    // STM32Cube HAL
+#define USE_RA_FSP       // Renesas RA FSP
 
 
 
-#include "main.h"
+// USB / UART choices:
+// Set to 1 to use USB-CDC as debug port. 0 for UART
+// USB FUNCTION ARE CURRENTLY ONLY AVAILABLE FOR STM32
+#define USB_AS_DEBUG_PORT false
+
+/************************************************************************/
+
+
+
+#if defined(USE_STM32_HAL)
+    #define DEBUG_PLATFORM_STM32  1
+    #define DEBUG_PLATFORM_RA     0
+#elif defined(USE_RA_FSP)
+    #define DEBUG_PLATFORM_STM32  0
+    #define DEBUG_PLATFORM_RA     1
+#else
+    #error "Please #define USE_STM32_HAL or USE_RA_FSP before including ElegantDebug.h"
+#endif
+
+/*** Platform-specific includes *****************************************/
+
+#if DEBUG_PLATFORM_STM32
+    #include "main.h"
+
+    #if defined(HAL_UART_MODULE_ENABLED)
+        #include "usart.h"
+    #else
+        #error "At least one serial port should be opened"
+    #endif
+
+    #if (USB_AS_DEBUG_PORT == 1)
+        #include "usbd_cdc_if.h"
+    #endif
+
+    #if !defined(__STM32F0xx_HAL_H) && \
+        !defined(__STM32F1xx_HAL_H) && \
+        !defined(__STM32F2xx_HAL_H) && \
+        !defined(__STM32F3xx_HAL_H) && \
+        !defined(__STM32F4xx_HAL_H) && \
+        !defined(__STM32F7xx_HAL_H) && \
+        !defined(__STM32H5xx_HAL_H) && \
+        !defined(__STM32H7xx_HAL_H) && \
+        !defined(__STM32L0xx_HAL_H) && \
+        !defined(__STM32L1xx_HAL_H) && \
+        !defined(__STM32L4xx_HAL_H) && \
+        !defined(__STM32G0xx_HAL_H) && \
+        !defined(__STM32G4xx_HAL_H) && \
+        !defined(__STM32WBxx_HAL_H) && \
+        !defined(__STM32WLxx_HAL_H) && \
+        !defined(__STM32MP1xx_HAL_H) && \
+        !defined(STM32C0xx_HAL_H)
+    #error "This debugging library can only be used with STM32Cube HAL drivers"
+    #endif
+    // If you encounter this compilation error when including this library
+    // in a normal HAL project, it might be because I haven't fully listed
+    // all the macros of the STM32 series. If you encounter any, you are
+    // welcome to submit a PR or issue!
+
+#endif
+
+#if DEBUG_PLATFORM_RA
+    #include "hal_data.h"
+
+    #if !defined(R_SCI_UART_H) && !defined(R_SCI_B_UART_H)
+        #error "At least one SCI UART port should be configured in RASC"
+    #endif
+    
+#endif
+
+
 
 #include <cstdio>
+#include <cstdint>
 #include <cstdarg>
 #include <cstring>
 
 #if __cplusplus >= 202002L
 #include <source_location>
-#endif
-
-#if !defined(__STM32F0xx_HAL_H) && \
-    !defined(__STM32F1xx_HAL_H) && \
-    !defined(__STM32F2xx_HAL_H) && \
-    !defined(__STM32F3xx_HAL_H) && \
-    !defined(__STM32F4xx_HAL_H) && \
-    !defined(__STM32F7xx_HAL_H) && \
-    !defined(__STM32H5xx_HAL_H) && \
-    !defined(__STM32H7xx_HAL_H) && \
-    !defined(__STM32L0xx_HAL_H) && \
-    !defined(__STM32L1xx_HAL_H) && \
-    !defined(__STM32L4xx_HAL_H) && \
-    !defined(__STM32G0xx_HAL_H) && \
-    !defined(__STM32G4xx_HAL_H) && \
-    !defined(__STM32WBxx_HAL_H) && \
-    !defined(__STM32WLxx_HAL_H) && \
-    !defined(__STM32MP1xx_HAL_H) && \
-    !defined(STM32C0xx_HAL_H)
-#error "This debugging library can only be used with STM32Cube HAL drivers"
-#endif
-// If you encounter this compilation error when including this library
-// in a normal HAL project, it might be because I haven't fully listed
-// all the macros of the STM32 series. If you encounter any, you are
-// welcome to submit a PR or issue!
-
-#if defined(HAL_UART_MODULE_ENABLED)
-    #include "usart.h"
-#else
-    #error "At least one serial port should be opened"
-#endif
-
-#if (USB_AS_DEBUG_PORT == 1)
-    #include "usbd_cdc_if.h"
 #endif
 
 /* ANSI escape codes for output *****************************************/
@@ -159,19 +201,45 @@
 
 #define DEBUG_BUFFER_LEN 256
 
+
+// RA FSP tick provider (User must feed from timer ISR)
+#if DEBUG_PLATFORM_RA
+extern volatile uint32_t _debug_tick_ms;
+#endif
+
 class ElegantDebug {
     public:
 
-        // Constructor: can enable/disable timestamp and color output globally
-        #if __cplusplus < 202002L
-            ElegantDebug(bool enable_timestamp = true, bool enable_color = true);
-            ElegantDebug(UART_HandleTypeDef *huart,
-                         bool enable_timestamp = true, bool enable_color = true);
-        #else
-            ElegantDebug(bool enable_timestamp = true, bool enable_color = true,
-                         bool enable_filename_line = false);
-            ElegantDebug(UART_HandleTypeDef *huart, bool enable_timestamp = true,
-                         bool enable_color = true, bool enable_filename_line = false);
+    // Constructor: can enable/disable timestamp and color output globally
+    #if __cplusplus < 202002L
+
+        #if DEBUG_PLATFORM_STM32
+        ElegantDebug(bool enable_timestamp = true, bool enable_color = true);
+        ElegantDebug(UART_HandleTypeDef *huart,
+                     bool enable_timestamp = true, bool enable_color = true);
+        #elif DEBUG_PLATFORM_RA
+        ElegantDebug(uart_instance_t const *uart,
+                     bool enable_timestamp = true, bool enable_color = true);
+        #endif
+    #else // __cplusplus < 202002L
+        #if DEBUG_PLATFORM_STM32
+        ElegantDebug(bool enable_timestamp = true, bool enable_color = true,
+                     bool enable_filename_line = false);
+        ElegantDebug(UART_HandleTypeDef *huart, bool enable_timestamp = true,
+                     bool enable_color = true, bool enable_filename_line = false);
+        #elif DEBUG_PLATFORM_RA
+        ElegantDebug(uart_instance_t const *uart, bool enable_timestamp = true,
+                     bool enable_color = true, bool enable_filename_line = false);
+        #endif
+    #endif // __cplusplus < 202002L
+
+        ~ElegantDebug();
+
+        // RA FSP tick provider (User must feed from timer ISR)
+        #if DEBUG_PLATFORM_RA
+        static inline void tick() {
+            _debug_tick_ms++;
+        }
         #endif
 
         // Basic formatted log
@@ -185,36 +253,43 @@ class ElegantDebug {
         void success(const char* format, ...);
         void info(const char* format, ...);
 
-    #if __cplusplus < 202002L
+        #if __cplusplus < 202002L
         // void logWithType(const char* type, const char* format, ...);
         void error(const char* format, ...);
         void warning(const char* format, ...);
-    #else
+        #else
         // void logWithType(const char* type, const char* format, std::source_location loc = std::source_location::current(), ...);
         void error(const char* format, std::source_location loc = std::source_location::current(), ...);
         void warning(const char* format, std::source_location loc = std::source_location::current(), ...);
-    #endif
+        #endif
 
         static const char* customTextColor(uint8_t r, uint8_t g, uint8_t b);
         static const char* customBgColor(uint8_t r, uint8_t g, uint8_t b);
 
         inline void setTimestampEnabled(bool enabled) { _timestamp_enabled = enabled; }
-        inline void setColorEnabled(bool enabled) { _color_enabled = enabled; }
+        inline void setColorEnabled(bool enabled)     { _color_enabled = enabled; }
 
         #if __cplusplus >= 202002L
         inline void setFilenameLineEnabled(bool enabled) { _filename_line_enabled = enabled; }
         #endif
 
     private:
-        UART_HandleTypeDef *_huart;
+
+        #if DEBUG_PLATFORM_STM32
+        UART_HandleTypeDef *    _huart;
+        #elif DEBUG_PLATFORM_RA
+        uart_instance_t const * _uart;
+        #endif
+
         bool _timestamp_enabled;
         bool _color_enabled;
 
         #if __cplusplus >= 202002L
         bool _filename_line_enabled;
         #endif
-        
+
         void _send(const char* text);
+        uint32_t _getTick();
 
     // #if !__cpp_lib_source_location
     //     // If compiler doesn't support c++20 source_location, use macro to log with file and line number
