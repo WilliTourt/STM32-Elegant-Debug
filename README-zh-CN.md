@@ -1,9 +1,9 @@
-# STM32 Elegant Debug
+# Elegant Debug for STM32 & Renesas-RA MCUS
 
 > **Language/语言**: [English](README.md) | [简体中文](README-zh-CN.md)
 
 ## 简介
-- 这是一个轻量的 串口/USB-CDC 调试库，C / C++ 均适用，适配STM32 HAL库，提供格式化日志输出功能。
+- 这是一个轻量的 串口/USB-CDC 调试库，C / C++ 均适用，适配STM32 HAL库以及瑞萨RA FSP，提供格式化日志输出功能。
 - 特点：
   - 格式化日志
   - 可选的时间戳
@@ -24,7 +24,7 @@
 - 另有 C++ 版本放在 `Src-CPP/`
 
 ## 快速开始
-- 依赖 STM32Cube HAL 驱动，必须启用一个串口，或者启用USB-CDC（在MX配置中打开USB_DEVICE中间件，设置为CDC类）
+- 依赖 STM32Cube HAL 驱动 / Renesas RA FSP，必须启用一个串口，或者启用USB-CDC（USB模式当前仅在STM32上有效。在MX配置中打开USB_DEVICE中间件，设置为CDC类即可）
 - 输出长度由 `DEBUG_BUFFER_LEN` 宏控制（默认 256）
 - 输出方式（串口/USB）由 `USB_AS_DEBUG_PORT` 宏控制（默认0，使用串口；设置为1使用USB-CDC）
 
