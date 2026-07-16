@@ -1,24 +1,26 @@
 /*******************************************************************************
  * @file    ElegantDebug.h
- * @version 1.3
- * @brief   ANSI-colored debug logging for STM32 (C++ header).
+ * @version 1.4
+ * @brief   ANSI-colored debug logging — STM32 HAL & Renesas RA FSP (C++ header).
  *
- * This header declares the C++ `ElegantDebug` class used to send formatted log
- * messages over a HAL UART interface or USB-CDC interface. The class supports
- * optional timestamps and ANSI color output for terminals that support it.
+ * Cross-platform C++ debug logger supporting STM32Cube HAL and Renesas RA FSP.
+ * Output over UART (or USB-CDC on STM32), with optional FreeRTOS timestamps
+ * and ANSI color prefixes.
  * A functionally equivalent C implementation is provided under `Src-C/`.
  *
  * Usage:
- *   - Include this header in your C++ source and construct `ElegantDebug` with a
- *     pointer to a configured `UART_HandleTypeDef`.
+ *   - Define USE_STM32_HAL or USE_RA_FSP before including this header.
+ *   - STM32:  pass a `UART_HandleTypeDef*`.
+ *   - RA FSP:  pass a `uart_instance_t const*`.
  *   - Call `log`, `info`, `error`, etc. to print messages.
  *
  * Notes:
- *   - Requires STM32Cube HAL UART module; enable `HAL_UART_MODULE_ENABLED`.
+ *   - RA FSP: requires `hal_data.h` from RASC with an SCI UART stack configured.
+ *   - RA FSP: call `ElegantDebug::tick()` from a 1 ms timer ISR for timestamps.
  *   - See repository README for examples and integration instructions.
  *
  * @author:    WilliTourt <willitourt@foxmail.com>
- * @date:      2026-03-01
+ * @date:      2026-07-16
  * 
  * @changelog:
  * - 2025-12-10: Initial release.

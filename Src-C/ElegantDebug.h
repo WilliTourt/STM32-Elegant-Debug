@@ -18,7 +18,7 @@
  *   debug_info("Hello from STM32!\n");
  *
  * @author:    WilliTourt <willitourt@foxmail.com>
- * @date:      2026-03-01
+ * @date:      2026-07-16
  *
  * @changelog:
  * - 2025-12-10: Initial release.

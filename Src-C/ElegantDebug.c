@@ -13,7 +13,7 @@
  * other functions in this file.
  *
  * @author:    WilliTourt <willitourt@foxmail.com>
- * @date:      2026-03-01
+ * @date:      2026-07-16
  *
  * @changelog:
  * - (See header file)
@@ -70,7 +70,7 @@ static uint32_t _getTick(void) {
 
 
 static void _send(const char* text) {
-	
+
     #if DEBUG_PLATFORM_STM32
         #if (USB_AS_DEBUG_PORT == 1)
             if (text == NULL) return;
