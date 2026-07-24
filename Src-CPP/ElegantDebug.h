@@ -1,26 +1,29 @@
 /*******************************************************************************
  * @file    ElegantDebug.h
- * @version 1.4
- * @brief   ANSI-colored debug logging — STM32 HAL & Renesas RA FSP (C++ header).
+ * @version 1.5
+ * @brief   ANSI-colored debug logging — STM32 HAL, Renesas RA FSP, TI MSPM0 DL (C++ header).
  *
- * Cross-platform C++ debug logger supporting STM32Cube HAL and Renesas RA FSP.
- * Output over UART (or USB-CDC on STM32), with optional FreeRTOS timestamps
- * and ANSI color prefixes.
+ * Cross-platform C++ debug logger supporting STM32Cube HAL, Renesas RA FSP,
+ * and TI MSPM0 DL (Driver Library).
+ * Output over UART (or USB-CDC on STM32), with optional timestamps and ANSI
+ * color prefixes.
  * A functionally equivalent C implementation is provided under `Src-C/`.
  *
  * Usage:
- *   - Define USE_STM32_HAL or USE_RA_FSP before including this header.
+ *   - Define USE_STM32_HAL, USE_RA_FSP, or USE_TI_MSPM0 before including this header.
  *   - STM32:  pass a `UART_HandleTypeDef*`.
- *   - RA FSP:  pass a `uart_instance_t const*`.
+ *   - RA FSP: pass a `uart_instance_t const*`.
+ *   - TI MSPM0: pass a `UART_Regs*`.
  *   - Call `log`, `info`, `error`, etc. to print messages.
  *
  * Notes:
  *   - RA FSP: requires `hal_data.h` from RASC with an SCI UART stack configured.
- *   - RA FSP: call `ElegantDebug::tick()` from a 1 ms timer ISR for timestamps.
+ *   - TI MSPM0: requires `ti_msp_dl_config.h` from sysconfig with a UART stack configured.
+ *   - RA FSP / TI MSPM0: call `ElegantDebug::tick()` from a 1 ms timer ISR for timestamps.
  *   - See repository README for examples and integration instructions.
  *
  * @author:    WilliTourt <willitourt@foxmail.com>
- * @date:      2026-07-16
+ * @date:      2026-07-24
  * 
  * @changelog:
  * - 2025-12-10: Initial release.
@@ -35,6 +38,7 @@
  *               `customTextColor(r,g,b)` public method. This allows to fill
  *               in the color values at runtime. Background colors too.
  * - 2026-07-16: Added uart support to Renesas RA family mcus (USE_RA_FSP).
+ * - 2026-07-24: Added support for TI MSPM0 series.
  * 
  ******************************************************************************/
 
@@ -48,6 +52,7 @@
 
 // #define USE_STM32_HAL    // STM32Cube HAL
 // #define USE_RA_FSP       // Renesas RA FSP
+// #define USE_TI_MSPM0_DL     // TI MSPM0 DL (Driver Library)
 
 
 
@@ -63,11 +68,17 @@
 #if defined(USE_STM32_HAL)
     #define DEBUG_PLATFORM_STM32  1
     #define DEBUG_PLATFORM_RA     0
+    #define DEBUG_PLATFORM_TI     0
 #elif defined(USE_RA_FSP)
     #define DEBUG_PLATFORM_STM32  0
     #define DEBUG_PLATFORM_RA     1
+    #define DEBUG_PLATFORM_TI     0
+#elif defined(USE_TI_MSPM0_DL)
+    #define DEBUG_PLATFORM_STM32  0
+    #define DEBUG_PLATFORM_RA     0
+    #define DEBUG_PLATFORM_TI     1
 #else
-    #error "Please #define USE_STM32_HAL or USE_RA_FSP before including ElegantDebug.h"
+    #error "Please define USE_STM32_HAL / USE_RA_FSP / USE_TI_MSPM0_DL macro before including ElegantDebug.h"
 #endif
 
 /*** Platform-specific includes *****************************************/
@@ -108,7 +119,6 @@
     // in a normal HAL project, it might be because I haven't fully listed
     // all the macros of the STM32 series. If you encounter any, you are
     // welcome to submit a PR or issue!
-
 #endif
 
 #if DEBUG_PLATFORM_RA
@@ -117,7 +127,14 @@
     #if !defined(R_SCI_UART_H) && !defined(R_SCI_B_UART_H)
         #error "At least one SCI UART port should be configured in RASC"
     #endif
-    
+#endif
+
+#if DEBUG_PLATFORM_TI
+    #include "ti_msp_dl_config.h"
+
+    #if !defined(DL_UART_Main_init)
+        #error "At least one UART port should be configured in sysconfig"
+    #endif
 #endif
 
 
@@ -205,7 +222,7 @@
 
 
 // RA FSP tick provider (User must feed from timer ISR)
-#if DEBUG_PLATFORM_RA
+#if (DEBUG_PLATFORM_RA || DEBUG_PLATFORM_TI)
 extern volatile uint32_t _debug_tick_ms;
 #endif
 
@@ -222,8 +239,13 @@ class ElegantDebug {
         #elif DEBUG_PLATFORM_RA
         ElegantDebug(uart_instance_t const *uart,
                      bool enable_timestamp = true, bool enable_color = true);
+        #elif DEBUG_PLATFORM_TI
+        ElegantDebug(UART_Regs *uart_inst,
+                     bool enable_timestamp = true, bool enable_color = true)
         #endif
-    #else // __cplusplus < 202002L
+
+    #else
+
         #if DEBUG_PLATFORM_STM32
         ElegantDebug(bool enable_timestamp = true, bool enable_color = true,
                      bool enable_filename_line = false);
@@ -232,13 +254,17 @@ class ElegantDebug {
         #elif DEBUG_PLATFORM_RA
         ElegantDebug(uart_instance_t const *uart, bool enable_timestamp = true,
                      bool enable_color = true, bool enable_filename_line = false);
+        #elif DEBUG_PLATFORM_TI
+        ElegantDebug(UART_Regs *uart_inst, bool enable_timestamp = true,
+                     bool enable_color = true, bool enable_filename_line = false);
         #endif
+
     #endif // __cplusplus < 202002L
 
         ~ElegantDebug();
 
         // RA FSP tick provider (User must feed from timer ISR)
-        #if DEBUG_PLATFORM_RA
+        #if (DEBUG_PLATFORM_RA || DEBUG_PLATFORM_TI)
         static inline void tick() {
             _debug_tick_ms++;
         }
@@ -281,6 +307,8 @@ class ElegantDebug {
         UART_HandleTypeDef *    _huart;
         #elif DEBUG_PLATFORM_RA
         uart_instance_t const * _uart;
+        #elif DEBUG_PLATFORM_TI
+        UART_Regs *             _uart_inst;
         #endif
 
         bool _timestamp_enabled;
