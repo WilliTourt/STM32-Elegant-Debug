@@ -1,10 +1,10 @@
-# Elegant Debug for STM32 & Renesas-RA MCUS
+# Elegant Debug for STM32, Renesas-RA & TI-MSPM0 MCUs
 
 > **Language/语言**: [English](README.md) | [简体中文](README-zh-CN.md)
 
 ## Introduction
 
-- A lightweight serial/USB-CDC debug library suitable for both C and C++ projects on STM32 using the HAL drivers, or Renesas RA Family using FSP.
+- A lightweight serial/USB-CDC debug library suitable for both C and C++ projects on STM32 using the HAL drivers, Renesas RA Family using FSP, or TI MSPM0 using DL (Driver Library).
 - Features: 
   - Formatted output
   - Optional timestamp
@@ -27,10 +27,10 @@ Supports customized 24-bit colors:
 
 ## Quick Start
 
-- Depends on STM32Cube HAL / Renesas RA FSP, At least one UART enabled, or USB-CDC enabled (USB-CDC are currently only available on STM32. Enable USB_DEVICE middleware in MX and set to CDC class).
+- Depends on STM32Cube HAL / Renesas RA FSP / TI MSPM0 DL, At least one UART enabled, or USB-CDC enabled (USB-CDC are currently only available on STM32. Enable USB_DEVICE middleware in MX and set to CDC class).
 - The output buffer length is controlled by the `DEBUG_BUFFER_LEN` macro (default 256).
 - Output method (UART/USB) is controlled by the `USB_AS_DEBUG_PORT` macro (default 0 for UART; set to 1 for USB-CDC).
-- ⚠️ **Platform must be selected before use**: uncomment either `USE_STM32_HAL` or `USE_RA_FSP` in the header file before including it.
+- ⚠️ **Platform must be selected before use**: uncomment either `USE_STM32_HAL`, `USE_RA_FSP` or `USE_TI_MSPM0_DL` in the header file before including it.
 
 ### STM32 HAL Platform
 
@@ -38,7 +38,7 @@ Supports customized 24-bit colors:
    - Makefile/CMake: add `.../Src-C/ElegantDebug.c` to your `SRCS` / `target_sources`.
    - Keil/MDK / IAR / CubeIDE: in the Project Explorer, Right-click -> Add Existing Files.
 
-2. Include the header and initialize (example using `huart1`, C API shown; C++ usage is identical):
+2. Include the header and initialize (example using STM32 `huart1`, C API shown; C++ usage is identical):
 
 ```c
 #define USE_STM32_HAL
@@ -87,6 +87,24 @@ void vSysTick(void) {
 
 C++ version uses `ElegantDebug::tick()` instead.
 
+### TI MSPM0 DL Platform
+
+1. Add `Src-C/ElegantDebug.h` and `Src-C/ElegantDebug.c` to your CCS Theia project.
+
+2. Configure a **UART** peripheral in SysConfig and make sure the instance is enabled.
+
+3. Initialize and use (C version shown):
+
+```c
+#define USE_TI_MSPM0
+#include "ElegantDebug.h"
+
+debug_init(UART0_INST, true, true, false);
+debug_info("Hello from TI MSPM0!");
+```
+
+4. **Timestamp feeding** (important): Same as the RA platform, create a **1 ms** counter or call `debug_tick()` (C) / `ElegantDebug::tick()` (C++) from the SysTick ISR to update the timestamp.
+
 ### Shared Examples
 
 ```c
@@ -113,8 +131,9 @@ debug_setFilenameLineEnabled(true);  // After enabling, error and warning messag
 
 - `void debug_init(UART_HandleTypeDef *huart, bool enable_timestamp, bool enable_color, bool enable_filename_line);` (STM32)
 - `void debug_init(uart_instance_t const *uart, bool enable_timestamp, bool enable_color, bool enable_filename_line);` (Renesas RA)
-  - Initialize the library. Must be called before other functions. Provide a HAL UART handle or FSP UART instance and flags to enable timestamp/color/filename-line display.
-- `static inline void debug_tick(void);` (RA FSP only)
+- `void debug_init(UART_Regs *uart_inst, bool enable_timestamp, bool enable_color, bool enable_filename_line);` (TI MSPM0)
+  - Initialize the library. Must be called before other functions. Provide a HAL UART handle / FSP UART instance / DL UART register pointer and flags to enable timestamp/color/filename-line display.
+- `static inline void debug_tick(void);` (RA FSP and TI MSPM0 only)
   - Call from a timer ISR to increment the internal millisecond counter used for timestamps.
 - `void debug_log(const char* format, ...);`
   - Basic formatted output (no prefix).
@@ -136,8 +155,9 @@ debug_setFilenameLineEnabled(true);  // After enabling, error and warning messag
 
 - `ElegantDebug(UART_HandleTypeDef *huart, bool enable_timestamp = true, bool enable_color = true, bool enable_filename_line = false);` (STM32)
 - `ElegantDebug(uart_instance_t const *uart, bool enable_timestamp = true, bool enable_color = true, bool enable_filename_line = false);` (Renesas RA)
-  - Constructor: pass a HAL UART handle or FSP UART instance and flags to enable timestamp/color/filename-line display.
-- `static inline void tick(void);` (RA FSP only)
+- `ElegantDebug(UART_Regs *uart_inst, bool enable_timestamp = true, bool enable_color = true, bool enable_filename_line = false);` (TI MSPM0)
+  - Constructor: pass a HAL UART handle / FSP UART instance / DL UART register pointer and flags to enable timestamp/color/filename-line display.
+- `static inline void tick(void);` (RA FSP and TI MSPM0 only)
   - Static method, called from a timer ISR to increment the internal millisecond counter used for timestamps.
 - `void log(const char* format, ...);`
   - Basic formatted output (no prefix).
@@ -188,10 +208,10 @@ For more information about ANSI escape codes, refer to: [ANSI escape code - Hand
 - No output or garbled output on the serial terminal:
   - Verify the UART is correctly initialized (especially baud rate).
   - If colors are enabled but your terminal does not support ANSI, call `debug_setColorEnabled(false)`.
-- RA platform timestamps not working or showing `[00:00:00.000]`:
+- RA / TI MSPM0 platform timestamps not working or showing `[00:00:00.000]`:
   - Ensure you are calling the tick function mentioned above in your 1 ms timer ISR.
 - Unexpected resets/crashes:
-  - Possible buffer overflow: check `DEBUG_BUFFER_LEN` (default 256). Increase it in `ElegantDebug.h` if you need longer messages (mind RAM usage).
+  - Possible buffer overflow: check `DEBUG_BUFFER_LEN` (default 256). Increase it in `ElegantDebug.h` if you need longer messages.
 
 ## Changelog
 
@@ -219,10 +239,16 @@ For more information about ANSI escape codes, refer to: [ANSI escape code - Hand
 
 ### v1.4 (2026-07-16)
 
-- **New**: Renesas RA FSP platform support (`USE_RA_FSP` macro)
+- **New**: Renesas RA FSP platform supported (use `USE_RA_FSP` macro)
   - SCI UART output (both SCI and SCI_B supported)
   - Independent tick counter `_debug_tick_ms`, fed from user timer ISR: C `debug_tick()` / C++ `ElegantDebug::tick()` inline functions
 - **New**: Platform selection mechanism (`#if defined(USE_STM32_HAL)` / `#elif defined(USE_RA_FSP)`), conditional compilation
+
+### v1.5 (2026-07-24)
+
+- **New**: TI MSPM0 DL platform supported (use `USE_TI_MSPM0_DL` macro)
+  - The timestamp shares `_debug_tick_ms` with the RA platform, feeds in from SysTick ISR
+  - The platform selection mechanism is extended to three platform conditional compilations
 
 ## Other
 
