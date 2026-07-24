@@ -241,7 +241,7 @@ class ElegantDebug {
                      bool enable_timestamp = true, bool enable_color = true);
         #elif DEBUG_PLATFORM_TI
         ElegantDebug(UART_Regs *uart_inst,
-                     bool enable_timestamp = true, bool enable_color = true)
+                     bool enable_timestamp = true, bool enable_color = true);
         #endif
 
     #else
