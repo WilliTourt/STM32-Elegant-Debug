@@ -1,24 +1,27 @@
 /*******************************************************************************
  * @file    ElegantDebug.h
  * @version 1.5
- * @brief   ANSI-colored debug logging — STM32 HAL, Renesas RA FSP, TI MSPM0 DL (C++ header).
+ * @brief   ANSI-colored debug logging — STM32 HAL, Renesas RA FSP, TI MSPM0 DL.
  *
  * Cross-platform C++ debug logger supporting STM32Cube HAL, Renesas RA FSP,
  * and TI MSPM0 DL (Driver Library).
  * Output over UART (or USB-CDC on STM32), with optional timestamps and ANSI
  * color prefixes.
  * A functionally equivalent C implementation is provided under `Src-C/`.
- *
+ * 
+ * Requirements:
+ *  - STM32: STM32Cube HAL UART driver and `HAL_UART_MODULE_ENABLED` required.
+ *  - Renesas RA: RASC-generated `hal_data.h` with an SCI UART stack.
+ *  - TI MSPM0: sysconfig-generated `ti_msp_dl_config.h` with a UART stack configured.
+ * 
  * Usage:
  *   - Define USE_STM32_HAL, USE_RA_FSP, or USE_TI_MSPM0 before including this header.
- *   - STM32:  pass a `UART_HandleTypeDef*`.
+ *   - STM32:  pass a `UART_HandleTypeDef*` or enable USB-CDC class.
  *   - RA FSP: pass a `uart_instance_t const*`.
  *   - TI MSPM0: pass a `UART_Regs*`.
  *   - Call `log`, `info`, `error`, etc. to print messages.
  *
  * Notes:
- *   - RA FSP: requires `hal_data.h` from RASC with an SCI UART stack configured.
- *   - TI MSPM0: requires `ti_msp_dl_config.h` from sysconfig with a UART stack configured.
  *   - RA FSP / TI MSPM0: call `ElegantDebug::tick()` from a 1 ms timer ISR for timestamps.
  *   - See repository README for examples and integration instructions.
  *
@@ -40,7 +43,7 @@
  * - 2026-07-16: Added uart support to Renesas RA family mcus (USE_RA_FSP).
  * - 2026-07-24: Added support for TI MSPM0 series.
  * 
- ******************************************************************************/
+ *******************************************************************************/
 
 #pragma once
 
@@ -63,6 +66,12 @@
 
 /************************************************************************/
 
+
+/*** Buffer size settings ***********************************************/
+
+#define DEBUG_BUFFER_LEN 256
+
+/************************************************************************/
 
 
 #if defined(USE_STM32_HAL)
@@ -218,7 +227,6 @@
 
 /************************************************************************/
 
-#define DEBUG_BUFFER_LEN 256
 
 
 // RA FSP tick provider (User must feed from timer ISR)

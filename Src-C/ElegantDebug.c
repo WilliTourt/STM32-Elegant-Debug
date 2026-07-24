@@ -1,19 +1,19 @@
 /*******************************************************************************
  * @file    ElegantDebug.c
- * @version 1.4
- * @brief   C implementation for ANSI-colored debug logging on STM32 & Renesas RA.
+ * @version 1.5
+ * @brief   C implementation for ANSI-colored debug logging — STM32 HAL, Renesas RA FSP, TI MSPM0 DL.
  *
  * Implements the C API declared in `Src-C/ElegantDebug.h`. Provides formatted
- * logging functions that send output over a HAL UART interface (STM32) or
- * SCI UART (Renesas RA); USB-CDC is also supported on STM32 when
- * `USB_AS_DEBUG_PORT` is enabled. Supports optional timestamps and
+ * logging functions that send output over a HAL UART interface (STM32),
+ * SCI UART (Renesas RA), or DL UART (TI MSPM0); USB-CDC is also supported
+ * on STM32 when `USB_AS_DEBUG_PORT` is enabled. Supports optional timestamps and
  * ANSI color prefixes.
  *
  * Make sure to call `debug_init()` with a valid UART instance before using
  * other functions in this file.
  *
  * @author:    WilliTourt <willitourt@foxmail.com>
- * @date:      2026-07-16
+ * @date:      2026-07-24
  *
  * @changelog:
  * - (See header file)
@@ -23,7 +23,7 @@
 
 
 
-#if DEBUG_PLATFORM_RA
+#if (DEBUG_PLATFORM_RA || DEBUG_PLATFORM_TI)
 volatile uint32_t _debug_tick_ms = 0;
 #endif
 
@@ -33,6 +33,8 @@ volatile uint32_t _debug_tick_ms = 0;
 static UART_HandleTypeDef *_huart = NULL;
 #elif DEBUG_PLATFORM_RA
 static uart_instance_t const *_uart = NULL;
+#elif DEBUG_PLATFORM_TI
+static UART_Regs *_uart_inst = NULL;
 #endif
 
 static bool _timestamp_enabled = true;
@@ -55,6 +57,13 @@ void debug_init(uart_instance_t const *uart, bool enable_timestamp, bool enable_
     _color_enabled = enable_color;
     _filename_line_enabled = enable_filename_line;
 }
+#elif DEBUG_PLATFORM_TI
+void debug_init(UART_Regs *uart_inst, bool enable_timestamp, bool enable_color, bool enable_filename_line) {
+    _uart_inst = uart_inst;
+    _timestamp_enabled = enable_timestamp;
+    _color_enabled = enable_color;
+    _filename_line_enabled = enable_filename_line;
+}
 #endif
 
 
@@ -62,7 +71,7 @@ void debug_init(uart_instance_t const *uart, bool enable_timestamp, bool enable_
 static uint32_t _getTick(void) {
 #if DEBUG_PLATFORM_STM32
     return HAL_GetTick();
-#elif DEBUG_PLATFORM_RA
+#elif (DEBUG_PLATFORM_RA || DEBUG_PLATFORM_TI)
     return _debug_tick_ms;
 #endif
 }
@@ -79,6 +88,8 @@ static void _send(const char* text) {
         #endif
     #elif DEBUG_PLATFORM_RA
         if (_uart == NULL || text == NULL) return;
+    #elif DEBUG_PLATFORM_TI
+        if (_uart_inst == NULL || text == NULL) return;
     #endif
 
     char out[DEBUG_BUFFER_LEN * 2];
@@ -120,6 +131,10 @@ static void _send(const char* text) {
                            (uint8_t*)out,
                            (uint32_t)strlen(out));
         #endif
+    #elif DEBUG_PLATFORM_TI
+        for (size_t i = 0; out[i] != '\0'; i++) {
+            DL_UART_transmitDataBlocking(_uart_inst, (uint8_t)out[i]);
+        }
     #endif
 }
 
